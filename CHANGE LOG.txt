@@ -1,0 +1,4 @@
+1.0 => 1.1
+==============================
+	- Code optimization.
+	- Now you can use "<!--OUGC_ANNBARS-->" in (almost) any template to show the bars.
