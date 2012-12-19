@@ -75,7 +75,7 @@ function ougc_annbars_info()
 	return array(
 		'name'			=> 'OUGC Announcement Bars',
 		'description'	=> $lang->ougc_annbars_plugin_d.($annbars->meets_requirements() ? '' : '<div id="flash_message" class="error">'.$annbars->message.'</div>'),
-		'website'		=> 'http://mods.mybb.com/view/disable-guests',
+		'website'		=> 'http://mods.mybb.com/view/ougc-announcement-bars',
 		'author'		=> 'Omar G.',
 		'authorsite'	=> 'http://community.mybb.com/user-25096.html',
 		'version'		=> '1.1',
