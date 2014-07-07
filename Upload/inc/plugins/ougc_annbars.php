@@ -220,7 +220,7 @@ class OUGC_ANNBARS
 
 		$db->free_result($query);
 
-		empty($update) or $cache->update('ougc_annbars', $update);
+		$cache->update('ougc_annbars', $update);
 
 		return (bool)$update;
 	}
@@ -311,8 +311,6 @@ class OUGC_ANNBARS
 		$annbars->aid = (int)$aid;
 
 		$db->delete_query('ougc_annbars', 'aid=\''.$annbars->aid.'\'');
-
-		$this->update_cache();
 	}
 		
 	// Set rate data
@@ -711,7 +709,7 @@ function ougc_annbars_uninstall()
 // We are here, so here we write the other global hook too..
 function ougc_annbars_show(&$page)
 {
-	if(!my_strpos($page, '<!--OUGC_ANNBARS-->'))
+	if(my_strpos($page, '<!--OUGC_ANNBARS-->') === false)
 	{
 		return;
 	}
