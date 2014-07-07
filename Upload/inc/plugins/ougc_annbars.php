@@ -78,7 +78,7 @@ function ougc_annbars_info()
 		'website'		=> 'http://mods.mybb.com/view/ougc-announcement-bars',
 		'author'		=> 'Omar G.',
 		'authorsite'	=> 'http://community.mybb.com/user-25096.html',
-		'version'		=> '1.1',
+		'version'		=> '1.1.1',
 		'compatibility'	=> '16*',
 		'guid'			=> '14daaf91e0b11c91f83fe2bc3d98ac0d'
 	);
