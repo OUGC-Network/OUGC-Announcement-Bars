@@ -4,9 +4,9 @@
  *
  *   OUGC Announcement Bars plugin (/inc/languages/english/admin/ougc_annbars.php)
  *	 Author: Omar Gonzalez
- *   Copyright: © 2012 Omar Gonzalez
+ *   Copyright: © 2012 - 2013 Omar Gonzalez
  *   
- *   Website: http://community.mybb.com/user-25096.html
+ *   Website: http://omarg.me
  *
  *   This plugin will allow administrators and super moderators to manage announcement bars.
  *
@@ -76,7 +76,7 @@ $l['ougc_annbars_form_groups_d'] = 'Choose the groups to show this bar to. None 
 $l['ougc_annbars_form_date'] = 'End Date';
 $l['ougc_annbars_form_date_d'] = 'Choose the date this bar will stop being visible.';
 
-$l['ougc_annbars_button_submit'] = 'Summit';
+$l['ougc_annbars_button_submit'] = 'Submit';
 
 // Error / success message
 $l['ougc_annbars_error_invalid'] = 'Invalid announcement bar selected.';

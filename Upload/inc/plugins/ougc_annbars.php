@@ -4,9 +4,9 @@
  *
  *   OUGC Announcement Bars plugin (/inc/plugins/ougc_annbars.php)
  *	 Author: Omar Gonzalez
- *   Copyright: © 2012 Omar Gonzalez
+ *   Copyright: © 2012 - 2013 Omar Gonzalez
  *   
- *   Website: http://community.mybb.com/user-25096.html
+ *   Website: http://omarg.me
  *
  *   This plugin will allow administrators and super moderators to manage announcement bars.
  *
@@ -75,11 +75,11 @@ function ougc_annbars_info()
 	return array(
 		'name'			=> 'OUGC Announcement Bars',
 		'description'	=> $lang->ougc_annbars_plugin_d.($annbars->meets_requirements() ? '' : '<div id="flash_message" class="error">'.$annbars->message.'</div>'),
-		'website'		=> 'http://mods.mybb.com/view/ougc-announcement-bars',
+		'website'		=> 'http://omarg.me',
 		'author'		=> 'Omar G.',
-		'authorsite'	=> 'http://community.mybb.com/user-25096.html',
-		'version'		=> '1.1.1',
-		'compatibility'	=> '16*',
+		'authorsite'	=> 'http://omarg.me',
+		'version'		=> '1.8.0',
+		'compatibility'	=> '16*,18*',
 		'guid'			=> '14daaf91e0b11c91f83fe2bc3d98ac0d'
 	);
 }
@@ -220,7 +220,7 @@ class OUGC_ANNBARS
 
 		$db->free_result($query);
 
-		$cache->update('ougc_annbars', $update);
+		empty($update) or $cache->update('ougc_annbars', $update);
 
 		return (bool)$update;
 	}
@@ -311,6 +311,8 @@ class OUGC_ANNBARS
 		$annbars->aid = (int)$aid;
 
 		$db->delete_query('ougc_annbars', 'aid=\''.$annbars->aid.'\'');
+
+		$this->update_cache();
 	}
 		
 	// Set rate data
@@ -420,7 +422,7 @@ class OUGC_ANNBARS
 		// Date
 		if(isset($data['enddate_month']) && isset($data['enddate_day']) && isset($data['enddate_year']))
 		{
-			$insert_data['enddate'] = mktime (date('H', TIME_NOW), date('i', TIME_NOW), date('s', TIME_NOW), $data['enddate_month'], $data['enddate_day'], $data['enddate_year']);
+			$insert_data['enddate'] = mktime(date('H', TIME_NOW), date('i', TIME_NOW), date('s', TIME_NOW), $data['enddate_month'], $data['enddate_day'], $data['enddate_year']);
 		}
 
 		if($update)
@@ -719,49 +721,65 @@ function ougc_annbars_show(&$page)
 	$limit = (isset($settings['ougc_annbars_limit']) ? (int)$settings['ougc_annbars_limit'] : 0);
 	if($limit > 0)
 	{
-		global $PL, $annbars, $lang, $parser, $templates;
+		global $PL, $annbars;
 		$PL or require_once PLUGINLIBRARY;
-		$annbars->lang_load();
 		$bars = $PL->cache_read('ougc_annbars');
 
-		if(!is_object($parser))
-		{
-			require_once MYBB_ROOT.'inc/class_parser.php';
-			$parser = new postParser;
-		}
-
-		$count = 1;
 		$ougc_annbars = '';
-		$username = htmlspecialchars_uni(($GLOBALS['mybb']->user['uid'] ? $GLOBALS['mybb']->user['username'] : $lang->guest));
-		foreach($bars as $key => $bar)
+		if(is_array($bars))
 		{
-			if($bar['groups'] && !(bool)$PL->is_member($bar['groups']) || $bar['enddate'] < TIME_NOW || $count > $limit)
+			global $parser, $lang, $templates;
+
+			$annbars->lang_load();
+
+			if(!is_object($parser))
 			{
-				continue;
+				require_once MYBB_ROOT.'inc/class_parser.php';
+				$parser = new postParser;
 			}
 
-			++$count;
-
-			if(!in_array($bar['style'], $annbars->styles))
+			$username = $lang->guest;
+			if($GLOBALS['mybb']->user['uid'])
 			{
-				$bar['style'] = 'black';
+				$username = $GLOBALS['mybb']->user['username'];
 			}
 
-			$lang_val = 'ougc_annbars_bar_'.$key;
-			if(!empty($lang->$lang_val))
+			$count = 1;
+			foreach($bars as $key => $bar)
 			{
-				$bar['content'] = $lang->$lang_val;
+				if($bar['groups'] && !(bool)$PL->is_member($bar['groups']) || $bar['enddate'] < TIME_NOW)
+				{
+					continue;
+				}
+
+				if($count > $limit)
+				{
+					break;
+				}
+
+				++$count;
+
+				if(!in_array($bar['style'], $annbars->styles))
+				{
+					$bar['style'] = 'black';
+				}
+
+				$lang_val = 'ougc_annbars_bar_'.$key;
+				if(!empty($lang->$lang_val))
+				{
+					$bar['content'] = $lang->$lang_val;
+				}
+
+				$bar['content'] = $parser->parse_message($lang->sprintf($bar['content'], $username, $settings['bbname'], $settings['bburl']), array(
+					'allow_html'		=> 1,
+					'allow_smilies'		=> 1,
+					'allow_mycode'		=> 1,
+					'filter_badwords'	=> 1,
+					'shorten_urls'		=> 0
+				));
+
+				eval('$ougc_annbars .= "'.$templates->get('ougcannbars_bar').'";');
 			}
-
-			$bar['content'] = $parser->parse_message($lang->sprintf($bar['content'], $username, $settings['bbname'], $settings['bburl']), array(
-				'allow_html'		=> 1,
-				'allow_smilies'		=> 1,
-				'allow_mycode'		=> 1,
-				'filter_badwords'	=> 1,
-				'shorten_urls'		=> 0
-			));
-
-			eval('$ougc_annbars .= "'.$templates->get('ougcannbars_bar').'";');
 		}
 
 		return str_replace('<!--OUGC_ANNBARS-->', $ougc_annbars, $page);

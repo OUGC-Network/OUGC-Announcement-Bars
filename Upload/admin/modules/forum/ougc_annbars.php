@@ -4,9 +4,9 @@
  *
  *   OUGC Announcement Bars plugin (/admin/modules/forum/ougc_annbars.php)
  *	 Author: Omar Gonzalez
- *   Copyright: © 2012 Omar Gonzalez
+ *   Copyright: Â© 2012 - 2013 Omar Gonzalez
  *   
- *   Website: http://community.mybb.com/user-25096.html
+ *   Website: http://omarg.me
  *
  *   This plugin will allow administrators and super moderators to manage announcement bars.
  *
@@ -241,7 +241,7 @@ else
 				$bar['lang'] = 'ougc_annbars_form_visible';
 			}
 
-			$table->construct_cell('<img src="../admin/styles/default/images/icons/bullet_'.$bar['visible'].'.gif" alt="'.$lang->$bar['lang'].'" title="'.$lang->$bar['lang'].'" />', array('class' => 'align_center'));
+			$table->construct_cell('<img src="../'.$config['admin_dir'].'/styles/default/images/icons/bullet_'.$bar['visible'].'.gif" alt="'.$lang->$bar['lang'].'" title="'.$lang->$bar['lang'].'" />', array('class' => 'align_center'));
 
 			$popup = new PopupMenu('bar_'.$bar['aid'], $lang->options);
 			$popup->add_item($lang->ougc_annbars_tab_edit, $annbars->build_url(array('action' => 'edit', 'aid' => $bar['aid'])));
