@@ -207,7 +207,7 @@ class OUGC_ANNBARS
 	{
 		global $db, $cache;
 
-		$query = $db->simple_select('ougc_annbars', '*', 'enddate>=\''.TIME_NOW.'\'');
+		$query = $db->simple_select('ougc_annbars', '*', 'enddate=0 OR enddate>=\''.TIME_NOW.'\'');
 
 		$update = array();
 
@@ -422,7 +422,7 @@ class OUGC_ANNBARS
 		// Date
 		if(isset($data['enddate_month']) && isset($data['enddate_day']) && isset($data['enddate_year']))
 		{
-			$insert_data['enddate'] = mktime(date('H', TIME_NOW), date('i', TIME_NOW), date('s', TIME_NOW), $data['enddate_month'], $data['enddate_day'], $data['enddate_year']);
+			$insert_data['enddate'] = (int)mktime(date('H', TIME_NOW), date('i', TIME_NOW), date('s', TIME_NOW), $data['enddate_month'], $data['enddate_day'], $data['enddate_year']);
 		}
 
 		if($update)
@@ -747,7 +747,7 @@ function ougc_annbars_show(&$page)
 			$count = 1;
 			foreach($bars as $key => $bar)
 			{
-				if($bar['groups'] && !(bool)$PL->is_member($bar['groups']) || $bar['enddate'] < TIME_NOW)
+				if($bar['groups'] && !(bool)$PL->is_member($bar['groups']) || $bar['enddate'] && $bar['enddate'] < TIME_NOW)
 				{
 					continue;
 				}

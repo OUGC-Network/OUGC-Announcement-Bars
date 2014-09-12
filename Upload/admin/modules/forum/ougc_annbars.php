@@ -241,7 +241,7 @@ else
 				$bar['lang'] = 'ougc_annbars_form_visible';
 			}
 
-			$table->construct_cell('<img src="../'.$config['admin_dir'].'/styles/default/images/icons/bullet_'.$bar['visible'].'.gif" alt="'.$lang->$bar['lang'].'" title="'.$lang->$bar['lang'].'" />', array('class' => 'align_center'));
+			$table->construct_cell('<img src="../'.$config['admin_dir'].'/styles/default/images/icons/bullet_'.$bar['visible'].($mybb->version_code >= 1800 ? '.png' : '.gif').'" alt="'.$lang->$bar['lang'].'" title="'.$lang->$bar['lang'].'" />', array('class' => 'align_center'));
 
 			$popup = new PopupMenu('bar_'.$bar['aid'], $lang->options);
 			$popup->add_item($lang->ougc_annbars_tab_edit, $annbars->build_url(array('action' => 'edit', 'aid' => $bar['aid'])));
