@@ -74,13 +74,17 @@ function ougc_annbars_info()
 
 	return array(
 		'name'			=> 'OUGC Announcement Bars',
-		'description'	=> $lang->ougc_annbars_plugin_d.($annbars->meets_requirements() ? '' : '<div id="flash_message" class="error">'.$annbars->message.'</div>'),
+		'description'	=> $lang->ougc_annbars_plugin_d,
 		'website'		=> 'http://omarg.me',
 		'author'		=> 'Omar G.',
 		'authorsite'	=> 'http://omarg.me',
 		'version'		=> '1.8.0',
-		'compatibility'	=> '16*,18*',
-		'guid'			=> '14daaf91e0b11c91f83fe2bc3d98ac0d'
+		'versioncode'	=> 1800,
+		'compatibility'	=> '18*',
+		'pl'			=> array(
+			'version'	=> 12,
+			'url'		=> 'http://mods.mybb.com/view/pluginlibrary'
+		)
 	);
 }
 
@@ -137,27 +141,29 @@ class OUGC_ANNBARS
 	}
 
 	// Check PL requirements
-	function meets_requirements($version=11, $url='http://mods.mybb.com/view/pluginlibrary')
+	function meets_requirements()
 	{
 		global $PL;
+
+		$info = ougc_annbars_info();
 
 		if(!file_exists(PLUGINLIBRARY))
 		{
 			global $lang;
 			$this->lang_load();
 
-			$this->message = $lang->sprintf($lang->ougc_annbars_plreq, $url, $version);
+			$this->message = $lang->sprintf($lang->ougc_annbars_plreq, $info['pl']['url'], $info['pl']['version']);
 			return false;
 		}
 
 		$PL or require_once PLUGINLIBRARY;
 
-		if($PL->version < $version)
+		if($PL->version < $info['pl']['version'])
 		{
 			global $lang;
 			$this->lang_load();
 
-			$this->message = $lang->sprintf($lang->ougc_annbars_plold, $PL->version, $version, $url);
+			$this->message = $lang->sprintf($lang->ougc_annbars_plold, $PL->version, $info['pl']['version'], $info['pl']['url']);
 			return false;
 		}
 
@@ -375,7 +381,7 @@ class OUGC_ANNBARS
 		}
 
 		$content = trim($this->bar_data['content']);
-		if(!$content || my_strlen($content) > 250)
+		if(!$content)
 		{
 			$this->validate_errors[] = $lang->ougc_annbars_error_invalidcontent;
 			$valid = false;
@@ -618,6 +624,30 @@ function ougc_annbars_activate()
 	{$bar[\'content\']}
 </div><br/>'
 	));
+
+	// Insert/update version into cache
+	$plugins = $cache->read('ougc_plugins');
+	if(!$plugins)
+	{
+		$plugins = array();
+	}
+
+	$info = ougc_annbars_info();
+
+	if(!isset($plugins['annbars']))
+	{
+		$plugins['annbars'] = $info['versioncode'];
+	}
+
+	/*~*~* RUN UPDATES START *~*~*/
+	if($plugins['annbars'] <= 1801)
+	{
+		$db->modify_column('ougc_annbars', 'content', 'text NOT NULL');
+	}
+	/*~*~* RUN UPDATES END *~*~*/
+
+	$plugins['annbars'] = $info['versioncode'];
+	$cache->update('ougc_plugins', $plugins);
 }
 
 // Deactivate the plugin.
@@ -648,7 +678,7 @@ function ougc_annbars_install()
 	$db->write_query("CREATE TABLE `".TABLE_PREFIX."ougc_annbars` (
 			`aid` bigint(30) UNSIGNED NOT NULL AUTO_INCREMENT,
 			`name` varchar(100) NOT NULL DEFAULT '',
-			`content` varchar(255) NOT NULL DEFAULT '',
+			`content` text NOT NULL,
 			`style` varchar(20) NOT NULL DEFAULT '',
 			`groups` varchar(100) NOT NULL DEFAULT '',
 			`enddate` int(10) NOT NULL DEFAULT '0',
@@ -668,7 +698,7 @@ function ougc_annbars_is_installed()
 // Uninstall the plugin.
 function ougc_annbars_uninstall()
 {
-	global $annbars, $db, $PL;
+	global $annbars, $db, $PL, $cache;
 	$annbars->meets_requirements() or $annbars->admin_redirect($annbars->message, true);
 
 	// Drop our table
@@ -706,6 +736,23 @@ function ougc_annbars_uninstall()
 	{
 		$db->delete_query('templategroups', 'prefix=\'ougcplugins\''); // Delete template groups
 	}*/
+
+	// Delete version from cache
+	$plugins = (array)$cache->read('ougc_plugins');
+
+	if(isset($plugins['annbars']))
+	{
+		unset($plugins['annbars']);
+	}
+
+	if(!empty($plugins))
+	{
+		$cache->update('ougc_plugins', $plugins);
+	}
+	else
+	{
+		$PL->cache_delete('ougc_plugins');
+	}
 }
 
 // We are here, so here we write the other global hook too..
