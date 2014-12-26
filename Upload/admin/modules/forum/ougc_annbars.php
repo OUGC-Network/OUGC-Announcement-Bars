@@ -221,7 +221,7 @@ else
 		while($bar = $db->fetch_array($query))
 		{
 			$table->construct_cell(htmlspecialchars_uni($bar['name']));
-			$table->construct_cell(htmlspecialchars_uni($bar['content']));
+			$table->construct_cell(ougc_getpreview($bar['content'], 9999));
 
 			$bar['visible'] = 'off';
 			$bar['lang'] = 'ougc_annbars_form_hidden';
@@ -270,9 +270,6 @@ else
 		$limitstring .= '</div>';
 	}
 
-
-	
-	
 	$table->output($lang->ougc_annbars_tab_view_d.$limitstring);
 	$page->output_footer();
 }

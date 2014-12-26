@@ -858,3 +858,72 @@ function update_ougc_annbars()
 
 	$annbars->update_cache();
 }
+
+if(!function_exists('ougc_getpreview'))
+{
+	/**
+	 * Shorts a message to look like a preview.
+	 * Based off Zinga Burga's "Thread Tooltip Preview" plugin threadtooltip_getpreview() function.
+	 *
+	 * @param string Message to short.
+	 * @param int Maximum characters to show.
+	 * @param bool Strip MyCode Quotes from message.
+	 * @param bool Strip MyCode from message.
+	 * @return string Shortened message
+	**/
+	function ougc_getpreview($message, $maxlen=100, $stripquotes=true, $stripmycode=true)
+	{
+		// Attempt to remove quotes, skip if going to strip MyCode
+		if($stripquotes && !$stripmycode)
+		{
+			$message = preg_replace(array(
+				'#\[quote=([\"\']|&quot;|)(.*?)(?:\\1)(.*?)(?:[\"\']|&quot;)?\](.*?)\[/quote\](\r\n?|\n?)#esi',
+				'#\[quote\](.*?)\[\/quote\](\r\n?|\n?)#si',
+				'#\[quote\]#si',
+				'#\[\/quote\]#si'
+			), '', $message);
+		}
+
+		// Attempt to remove any MyCode
+		if($stripmycode)
+		{
+			global $parser;
+			if(!is_object($parser))
+			{
+				require_once MYBB_ROOT.'inc/class_parser.php';
+				$parser = new postParser;
+			}
+
+			$message = $parser->parse_message($message, array(
+				'allow_html'		=>	0,
+				'allow_mycode'		=>	1,
+				'allow_smilies'		=>	0,
+				'allow_imgcode'		=>	1,
+				'filter_badwords'	=>	1,
+				'nl2br'				=>	0
+			));
+
+			// before stripping tags, try converting some into spaces
+			$message = preg_replace(array(
+				'~\<(?:img|hr).*?/\>~si',
+				'~\<li\>(.*?)\</li\>~si'
+			), array(' ', "\n* $1"), $message);
+
+			$message = unhtmlentities(strip_tags($message));
+		}
+
+		// convert \xA0 to spaces (reverse &nbsp;)
+		$message = trim(preg_replace(array('~ {2,}~', "~\n{2,}~"), array(' ', "\n"), strtr($message, array("\xA0" => ' ', "\r" => '', "\t" => ' '))));
+
+		// newline fix for browsers which don't support them
+		$message = preg_replace("~ ?\n ?~", " \n", $message);
+
+		// Shorten the message if too long
+		if(my_strlen($message) > $maxlen)
+		{
+			$message = my_substr($message, 0, $maxlen-1).'...';
+		}
+
+		return htmlspecialchars_uni($message);
+	}
+}
