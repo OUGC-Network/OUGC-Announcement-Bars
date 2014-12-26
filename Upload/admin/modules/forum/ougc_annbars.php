@@ -138,6 +138,7 @@ if($mybb->input['action'] == 'add' || $mybb->input['action'] == 'edit')
 		'orange'	=> $lang->ougc_annbars_form_style_orange,
 	), $annbars->bar_data['style']));
 	$form_container->output_row($lang->ougc_annbars_form_groups.' <em>*</em>', $lang->ougc_annbars_form_groups_d, $form->generate_group_select('groups[]', $annbars->bar_data['groups'], array('multiple' => 1, 'size' => 5)));
+	$form_container->output_row($lang->ougc_annbars_form_forums.' <em>*</em>', $lang->ougc_annbars_form_forums_d, $form->generate_group_select('forums[]', $annbars->bar_data['forums'], array('multiple' => 1, 'size' => 5)));
 	$form_container->output_row($lang->ougc_annbars_form_date." <em>*</em>", $lang->ougc_annbars_form_date_d, $form->generate_date_select('enddate', $annbars->bar_data['enddate_day'], $annbars->bar_data['enddate_month'], $annbars->bar_data['enddate_year']));
 
 	$form_container->end();

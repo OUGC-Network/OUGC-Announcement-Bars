@@ -331,6 +331,7 @@ class OUGC_ANNBARS
 				'content'		=> $bar['content'],
 				'style'			=> $bar['style'],
 				'groups'		=> explode(',', $bar['groups']),
+				'forums'		=> explode(',', $bar['forums']),
 				'enddate'		=> $bar['enddate'],
 				'enddate_day'	=> date('j', $bar['enddate']),
 				'enddate_month'	=> date('n', $bar['enddate']),
@@ -344,6 +345,7 @@ class OUGC_ANNBARS
 				'content'		=> '',
 				'style'			=> 'black',
 				'groups'		=> array(),
+				'forums'		=> array(),
 				'enddate'		=> TIME_NOW,
 				'enddate_day'	=> date('j', TIME_NOW),
 				'enddate_month'	=> date('n', TIME_NOW),
@@ -411,6 +413,7 @@ class OUGC_ANNBARS
 			'content'		=> $db->escape_string((isset($data['content']) ? $data['content'] : '')),
 			'style'			=> $db->escape_string((isset($data['style']) ? $data['style'] : 'black')),
 			'groups'		=> '',
+			'forums'		=> '',
 			'enddate'		=> TIME_NOW,
 		);
 
@@ -423,6 +426,17 @@ class OUGC_ANNBARS
 				$gids[] = (int)$gid;
 			}
 			$insert_data['groups'] = $db->escape_string(implode(',', $gids));
+		}
+
+		// Forums
+		if(is_array($data['forums']))
+		{
+			$fids = array();
+			foreach($data['forums'] as $fid)
+			{
+				$fids[] = (int)$fid;
+			}
+			$insert_data['forums'] = $db->escape_string(implode(',', $fids));
 		}
 
 		// Date
@@ -466,7 +480,7 @@ $GLOBALS['annbars'] = new OUGC_ANNBARS;
 // Activate the plugin.
 function ougc_annbars_activate()
 {
-	global $lang, $annbars, $PL, $cache;
+	global $lang, $annbars, $PL, $cache, $db;
 	$annbars->lang_load();
 	$annbars->meets_requirements() or $annbars->admin_redirect($annbars->message, true);
 
@@ -643,6 +657,7 @@ function ougc_annbars_activate()
 	if($plugins['annbars'] <= 1801)
 	{
 		$db->modify_column('ougc_annbars', 'content', 'text NOT NULL');
+		$db->add_column('ougc_annbars', 'forums', 'varchar(100) NOT NULL DEFAULT \'\'');
 	}
 	/*~*~* RUN UPDATES END *~*~*/
 
@@ -681,6 +696,7 @@ function ougc_annbars_install()
 			`content` text NOT NULL,
 			`style` varchar(20) NOT NULL DEFAULT '',
 			`groups` varchar(100) NOT NULL DEFAULT '',
+			`forums` varchar(100) NOT NULL DEFAULT '',
 			`enddate` int(10) NOT NULL DEFAULT '0',
 			PRIMARY KEY (`aid`)
 		) ENGINE=MyISAM{$db->build_create_table_collation()};"
@@ -763,9 +779,9 @@ function ougc_annbars_show(&$page)
 		return;
 	}
 
-	global $settings;
+	global $mybb;
 
-	$limit = (isset($settings['ougc_annbars_limit']) ? (int)$settings['ougc_annbars_limit'] : 0);
+	$limit = (isset($mybb->settings['ougc_annbars_limit']) ? (int)$mybb->settings['ougc_annbars_limit'] : 0);
 	if($limit > 0)
 	{
 		global $PL, $annbars;
@@ -786,15 +802,48 @@ function ougc_annbars_show(&$page)
 			}
 
 			$username = $lang->guest;
-			if($GLOBALS['mybb']->user['uid'])
+			if($mybb->user['uid'])
 			{
-				$username = $GLOBALS['mybb']->user['username'];
+				$username = $mybb->user['username'];
 			}
+
+			$fid = false;
+			switch(THIS_SCRIPT)
+			{
+				// $fid
+				case 'announcements.php':
+				case 'editpost.php':
+				case 'forumdisplay.php':
+				case 'newreply.php':
+				case 'newthread.php':
+				case 'printthread.php':
+				case 'polls.php':
+				case 'sendthread.php':
+				case 'showthread.php':
+				case 'ratethread.php':
+				case 'moderation.php':
+				// $forum
+				case 'polls.php':
+				case 'sendthread.php':
+				case 'report.php':
+				// $mybb
+				case 'misc.php':
+					global $fid, $forum;
+					!empty($fid) or $fid = $forum['fid'];
+					!empty($fid) or $fid = $mybb->get_input('fid', 1);
+					break;
+			}
+			$fid = (int)$fid;
 
 			$count = 1;
 			foreach($bars as $key => $bar)
 			{
-				if($bar['groups'] && !(bool)$PL->is_member($bar['groups']) || $bar['enddate'] && $bar['enddate'] < TIME_NOW)
+				if($bar['groups'] && !is_member($bar['groups']) || $bar['enddate'] && $bar['enddate'] < TIME_NOW)
+				{
+					continue;
+				}
+
+				if($fid && $bar['forums'] != -1 && ($bar['forums'] == '' || my_strpos(','.$bar['forums'].',', ','.$fid.',') === false))
 				{
 					continue;
 				}
@@ -817,7 +866,7 @@ function ougc_annbars_show(&$page)
 					$bar['content'] = $lang->$lang_val;
 				}
 
-				$bar['content'] = $parser->parse_message($lang->sprintf($bar['content'], $username, $settings['bbname'], $settings['bburl']), array(
+				$bar['content'] = $parser->parse_message($lang->sprintf($bar['content'], $username, $mybb->settings['bbname'], $mybb->settings['bburl']), array(
 					'allow_html'		=> 1,
 					'allow_smilies'		=> 1,
 					'allow_mycode'		=> 1,
