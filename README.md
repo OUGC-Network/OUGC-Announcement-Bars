@@ -15,9 +15,20 @@ This plugin will allow administrators and super moderators to manage announcemen
 3. Edit general settings from "ACP -> Forums & Posts -> Manage Bars".
 4. __Enjoy!__
 
-### Installation
+### Update
+##1.x -> 1.8.0
 1. Deactivate old plugin.
 2. Upload the content of the "upload" folder to your MyBB root folder.
+3. Follow Installation instructions.
+4. __Enjoy!__
+
+##1.0 -> 1.1
+1. Deactivate old plugin (style sheet/template edits will get lost).
+2. Delete old plugin files.
+```
+FORUM_ROOT/inc/plugins/ougc_annbars.php
+FORUM_ROOT/inc/plugins/ougc_annbars/*
+```
 3. Follow Installation instructions.
 4. __Enjoy!__
 
