@@ -375,7 +375,7 @@ class OUGC_ANNBARS
 		}
 
 		$content = trim($this->bar_data['content']);
-		if(!$content || my_strlen($content) > 250)
+		if(!$content || my_strlen($content) > 2500)
 		{
 			$this->validate_errors[] = $lang->ougc_annbars_error_invalidcontent;
 			$valid = false;
@@ -648,7 +648,7 @@ function ougc_annbars_install()
 	$db->write_query("CREATE TABLE `".TABLE_PREFIX."ougc_annbars` (
 			`aid` bigint(30) UNSIGNED NOT NULL AUTO_INCREMENT,
 			`name` varchar(100) NOT NULL DEFAULT '',
-			`content` varchar(255) NOT NULL DEFAULT '',
+			`content` text NOT NULL DEFAULT '',
 			`style` varchar(20) NOT NULL DEFAULT '',
 			`groups` varchar(100) NOT NULL DEFAULT '',
 			`enddate` int(10) NOT NULL DEFAULT '0',
