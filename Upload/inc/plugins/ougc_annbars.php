@@ -836,7 +836,7 @@ function ougc_annbars_show(&$page)
 // We like nice stuff
 function ougc_annbars_logs(&$log)
 {
-	if($log['logitem']['module'] == 'forum-ougc_annbars' && $log['logitem']['action'] != 'rebuilt_cache')
+	if($log['logitem']['module'] == 'forum-ougc_annbars')
 	{
 		global $annbars, $lang;
 		$annbars->lang_load();
@@ -849,4 +849,12 @@ function ougc_annbars_logs(&$log)
 			$lang->$log['lang_string'] = $lang->$log['lang_string'];
 		}
 	}
+}
+
+// Cache manager helper.
+function update_ougc_annbars()
+{
+	global $annbars;
+
+	$annbars->update_cache();
 }

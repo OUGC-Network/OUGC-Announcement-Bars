@@ -54,8 +54,6 @@ $l['ougc_annbars_tab_add_d'] = 'Add a new announcement bar.';
 $l['ougc_annbars_tab_edit'] = 'Edit';
 $l['ougc_annbars_tab_delete'] = 'Delete';
 $l['ougc_annbars_tab_edit_d'] = 'Edit any existing announcement bar.';
-$l['ougc_annbars_tab_cache'] = 'Rebuilt Cache';
-$l['ougc_annbars_tab_cache_d'] = 'Here you can rebuilt bars cache in case you suspect something is wrong.';
 $l['ougc_annbars_form_content'] = 'Content';
 $l['ougc_annbars_form_status'] = 'Status';
 
@@ -104,7 +102,6 @@ $l['ougc_annbars_form_style_pink'] = 'Pink';
 $l['ougc_annbars_form_style_orange'] = 'Orange';
 
 // Logs
-$l['admin_log_forum_ougc_annbars_rebuilt_cache'] = 'OUGC Announcement Bars: Cache rebuild-ed.';
 $l['admin_log_forum_ougc_annbars_add'] = 'OUGC Announcement Bars: "{1}" added (AID: {2}).';
 $l['admin_log_forum_ougc_annbars_edit'] = 'OUGC Announcement Bars: "{1}" edited (AID: {2}).';
 $l['admin_log_forum_ougc_annbars_delete'] = 'OUGC Announcement Bars: bar deleted.';

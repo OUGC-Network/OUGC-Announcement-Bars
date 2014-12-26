@@ -61,20 +61,10 @@ if($mybb->input['action'] == 'edit')
 		'description'	=> $lang->ougc_annbars_tab_edit_d
 	);
 }
-$sub_tabs['ougc_annbars_cache'] = array(
-	'title'			=> $lang->ougc_annbars_tab_cache,
-	'link'			=> $annbars->build_url(array('action' => 'rebuilt_cache')),
-	'description'	=> $lang->ougc_annbars_tab_cache_d
-);
 
 $page->add_breadcrumb_item($lang->ougc_annbars_menu, $sub_tabs['ougc_annbars_view']['link']);
 
-if($mybb->input['action'] == 'rebuilt_cache')
-{
-	$annbars->log_action();
-	$annbars->admin_redirect($lang->ougc_annbars_success_cache, !$annbars->update_cache());
-}
-elseif($mybb->input['action'] == 'add' || $mybb->input['action'] == 'edit')
+if($mybb->input['action'] == 'add' || $mybb->input['action'] == 'edit')
 {
 	$add = ($mybb->input['action'] == 'add' ? true : false);
 
