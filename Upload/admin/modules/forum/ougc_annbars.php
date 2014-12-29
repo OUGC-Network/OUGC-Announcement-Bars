@@ -91,6 +91,72 @@ if($mybb->input['action'] == 'add' || $mybb->input['action'] == 'edit')
 		$page->output_nav_tabs($sub_tabs, 'ougc_annbars_edit');
 	}
 
+	foreach(array('groups', 'visible', 'forums', 'scripts') as $key)
+	{
+		if(!isset($mybb->input[$key]) && isset($bar[$key]))
+		{
+			$mybb->input[$key] = $bar[$key];
+		}
+	}
+	unset($key);
+
+	$group_checked = array('all' => '', 'custom' => '', 'none' => '');
+	if($mybb->get_input('groups_type') == 'all' || $mybb->get_input('groups', 1) == -1)
+	{
+		$mybb->input['groups_type'] = 'all';
+		$mybb->input['groups'] = -1;
+		$group_checked['all'] = 'checked="checked"';
+	}
+	elseif($mybb->get_input('groups_type') == 'none' || $mybb->get_input('groups') == '' && !$mybb->get_input('groups', 2))
+	{
+		$mybb->input['groups_type'] = 'none';
+		$mybb->input['groups'] = '';
+		$group_checked['none'] = 'checked="checked"';
+	}
+	else
+	{
+		$mybb->input['groups_type'] = 'custom';
+		$mybb->input['groups'] = $annbars->clean_ints($mybb->input['groups']);
+		$group_checked['custom'] = 'checked="checked"';
+	}
+	$annbars->bar_data['groups'] = $mybb->input['groups'];
+
+	$visible_checked = array('everywhere' => '', 'custom' => '');
+	if($mybb->get_input('visible_type') == 'everywhere' || $mybb->get_input('visible', 1) == 1)
+	{
+		$mybb->input['visible_type'] = 'everywhere';
+		$mybb->input['visible'] = 1;
+		$visible_checked['everywhere'] = 'checked="checked"';
+	}
+	else
+	{
+		$mybb->input['visible_type'] = 'custom';
+		$mybb->input['visible'] = 0;
+		$visible_checked['custom'] = 'checked="checked"';
+	}
+	$annbars->bar_data['visible'] = $mybb->input['visible'];
+
+	$forum_checked = array('all' => '', 'custom' => '', 'none' => '');
+	if($mybb->get_input('forums_type') == 'all' || $mybb->get_input('forums', 1) == -1)
+	{
+		$mybb->input['forums_type'] = 'all';
+		$mybb->input['forums'] = -1;
+		$forum_checked['all'] = 'checked="checked"';
+	}
+	elseif($mybb->get_input('forums_type') == 'none' || $mybb->get_input('forums') == '' && !$mybb->get_input('forums', 2))
+	{
+		$mybb->input['forums_type'] = 'none';
+		$mybb->input['forums'] = '';
+		$forum_checked['none'] = 'checked="checked"';
+	}
+	else
+	{
+		$mybb->input['forums_type'] = 'custom';
+		$mybb->input['forums'] = $annbars->clean_ints($mybb->input['forums']);
+		$forum_checked['custom'] = 'checked="checked"';
+	}
+	$annbars->bar_data['forums'] = $mybb->input['forums'];
+
 	if($mybb->request_method == 'post')
 	{
 		if($annbars->validate_data())
@@ -126,7 +192,7 @@ if($mybb->input['action'] == 'add' || $mybb->input['action'] == 'edit')
 	}
 
 	$form_container->output_row($lang->ougc_annbars_form_name.' <em>*</em>', $lang->ougc_annbars_form_name_d, $form->generate_text_box('name', $annbars->bar_data['name']));
-	$form_container->output_row($lang->ougc_annbars_form_content, $lang->ougc_annbars_form_content_d, $form->generate_text_area('content', $annbars->bar_data['content']));
+	$form_container->output_row($lang->ougc_annbars_form_content, $lang->ougc_annbars_form_content_d, $form->generate_text_area('content', $annbars->bar_data['content'], array('rows' => 10, 'cols' => 90, 'style' => 'width: auto;')));
 	$form_container->output_row($lang->ougc_annbars_form_style, $lang->ougc_annbars_form_style_d, $form->generate_select_box('style', array(
 		'black'		=> $lang->ougc_annbars_form_style_black,
 		'white'		=> $lang->ougc_annbars_form_style_white,
@@ -137,8 +203,69 @@ if($mybb->input['action'] == 'add' || $mybb->input['action'] == 'edit')
 		'pink'		=> $lang->ougc_annbars_form_style_pink,
 		'orange'	=> $lang->ougc_annbars_form_style_orange,
 	), $annbars->bar_data['style']));
-	$form_container->output_row($lang->ougc_annbars_form_groups.' <em>*</em>', $lang->ougc_annbars_form_groups_d, $form->generate_group_select('groups[]', $annbars->bar_data['groups'], array('multiple' => 1, 'size' => 5)));
-	$form_container->output_row($lang->ougc_annbars_form_forums.' <em>*</em>', $lang->ougc_annbars_form_forums_d, $form->generate_group_select('forums[]', $annbars->bar_data['forums'], array('multiple' => 1, 'size' => 5)));
+
+	ougc_print_selection_javascript();
+
+	$groups_select = "
+	<dl style=\"margin-top: 0; margin-bottom: 0; width: 100%\">
+		<dt><label style=\"display: block;\"><input type=\"radio\" name=\"groups_type\" value=\"all\" {$group_checked['all']} class=\"groups_forums_groups_check\" onclick=\"checkAction('groups');\" style=\"vertical-align: middle;\" /> <strong>{$lang->all_groups}</strong></label></dt>
+		<dt><label style=\"display: block;\"><input type=\"radio\" name=\"groups_type\" value=\"custom\" {$group_checked['custom']} class=\"groups_forums_groups_check\" onclick=\"checkAction('groups');\" style=\"vertical-align: middle;\" /> <strong>{$lang->select_groups}</strong></label></dt>
+		<dd style=\"margin-top: 4px;\" id=\"groups_forums_groups_custom\" class=\"groups_forums_groups\">
+			<table cellpadding=\"4\">
+				<tr>
+					<td valign=\"top\"><small>{$lang->groups_colon}</small></td>
+					<td>".$form->generate_group_select('groups[]', $mybb->get_input('groups', 2), array('multiple' => true, 'size' => 5))."</td>
+				</tr>
+			</table>
+		</dd>
+		<dt><label style=\"display: block;\"><input type=\"radio\" name=\"groups_type\" value=\"none\" {$group_checked['none']} class=\"groups_forums_groups_check\" onclick=\"checkAction('groups');\" style=\"vertical-align: middle;\" /> <strong>{$lang->none}</strong></label></dt>
+	</dl>
+	<script type=\"text/javascript\">
+		checkAction('groups');
+	</script>";
+
+	$form_container->output_row($lang->ougc_annbars_form_groups.' <em>*</em>', $lang->ougc_annbars_form_groups_d, $groups_select, '', array(), array('id' => 'row_groups'));
+
+	$forums_select = "
+	<dl style=\"margin-top: 0; margin-bottom: 0; width: 100%\">
+		<dt><label style=\"display: block;\"><input type=\"radio\" name=\"forums_type\" value=\"all\" {$forum_checked['all']} class=\"forums_forums_groups_check\" onclick=\"checkAction('forums');\" style=\"vertical-align: middle;\" /> <strong>{$lang->all_forums}</strong></label></dt>
+		<dt><label style=\"display: block;\"><input type=\"radio\" name=\"forums_type\" value=\"custom\" {$forum_checked['custom']} class=\"forums_forums_groups_check\" onclick=\"checkAction('forums');\" style=\"vertical-align: middle;\" /> <strong>{$lang->select_forums}</strong></label></dt>
+		<dd style=\"margin-top: 4px;\" id=\"forums_forums_groups_custom\" class=\"forums_forums_groups\">
+			<table cellpadding=\"4\">
+				<tr>
+					<td valign=\"top\"><small>{$lang->forums_colon}</small></td>
+					<td>".$form->generate_forum_select('forums[]', $mybb->get_input('forums', 2), array('multiple' => true, 'size' => 5))."</td>
+				</tr>
+			</table>
+		</dd>
+		<dt><label style=\"display: block;\"><input type=\"radio\" name=\"forums_type\" value=\"none\" {$forum_checked['none']} class=\"forums_forums_groups_check\" onclick=\"checkAction('forums');\" style=\"vertical-align: middle;\" /> <strong>{$lang->none}</strong></label></dt>
+	</dl>
+	<script type=\"text/javascript\">
+		checkAction('forums');
+	</script>";
+
+	$visible_select = "
+	<dl style=\"margin-top: 0; margin-bottom: 0; width: 100%\">
+		<dt><label style=\"display: block;\"><input type=\"radio\" name=\"visible_type\" value=\"everywhere\" {$visible_checked['everywhere']} class=\"visible_forums_groups_check\" onclick=\"checkAction('visible');\" style=\"vertical-align: middle;\" /> <strong>{$lang->ougc_annbars_form_everywhere}</strong></label></dt>
+		<dt><label style=\"display: block;\"><input type=\"radio\" name=\"visible_type\" value=\"custom\" {$visible_checked['custom']} class=\"visible_forums_groups_check\" onclick=\"checkAction('visible');\" style=\"vertical-align: middle;\" /> <strong>{$lang->ougc_annbars_form_custom}</strong></label></dt>
+		<dd style=\"margin-top: 4px;\" id=\"visible_forums_groups_custom\" class=\"visible_forums_groups\">
+			<table cellpadding=\"4\">
+				<tr>
+					<td valign=\"top\"><small>{$lang->ougc_annbars_form_forums}</small></td>
+					<td>".$forums_select."</td>
+				</tr>
+				<tr>
+					<td valign=\"top\"><small>{$lang->ougc_annbars_form_scripts}</small></td>
+					<td>".$form->generate_text_area('scripts', $annbars->bar_data['scripts'], array('rows' => 7, 'cols' => 60, 'style' => 'width: auto;'))."</td>
+				</tr>
+			</table>
+		</dd>
+	</dl>
+	<script type=\"text/javascript\">
+		checkAction('visible');
+	</script>";
+
+	$form_container->output_row($lang->ougc_annbars_form_visible.' <em>*</em>', $lang->ougc_annbars_form_visible_d, $visible_select, '', array(), array('id' => 'row_visible'));
 	$form_container->output_row($lang->ougc_annbars_form_date." <em>*</em>", $lang->ougc_annbars_form_date_d, $form->generate_date_select('enddate', $annbars->bar_data['enddate_day'], $annbars->bar_data['enddate_month'], $annbars->bar_data['enddate_year']));
 
 	$form_container->end();
@@ -173,6 +300,26 @@ elseif($mybb->input['action'] == 'delete')
 	$page->add_breadcrumb_item($lang->ougc_annbars_tab_delete);
 
 	$page->output_confirm_action($annbars->build_url(array('action' => 'delete', 'aid' => $mybb->input['aid'], 'my_post_key' => $mybb->post_code)));
+}
+elseif($mybb->input['action'] == 'preview')
+{
+	$bar = $annbars->get_bar($mybb->input['aid']);
+	if(!(isset($bar['aid']) && (int)$bar['aid'] > 0))
+	{
+		$annbars->admin_redirect($lang->ougc_annbars_error_invalid, true);
+	}
+
+	$page->add_breadcrumb_item($lang->ougc_annbars_tab_preview);
+
+	$page->output_header(htmlspecialchars_uni($bar['name']));
+
+	$table = new Table;
+	$table->construct_header(htmlspecialchars_uni($bar['name']));
+	$table->construct_cell($annbars->parse_message($bar['content']));
+	$table->construct_row();
+	$table->output($lang->ougc_annbars_tab_preview);
+
+	$page->output_footer();
 }
 else
 {
@@ -221,22 +368,27 @@ else
 
 		while($bar = $db->fetch_array($query))
 		{
-			$table->construct_cell(htmlspecialchars_uni($bar['name']));
-			$table->construct_cell(ougc_getpreview($bar['content'], 9999));
+			$editurl = $annbars->build_url(array('action' => 'edit', 'aid' => $bar['aid']));
 
-			$bar['visible'] = 'off';
-			$bar['lang'] = 'ougc_annbars_form_hidden';
-			if($bar['enddate'] >= TIME_NOW)
+			$bar['visible'] = 'on';
+			$bar['lang'] = 'ougc_annbars_form_visible';
+			$bar['name'] = htmlspecialchars_uni($bar['name']);
+			if(!($bar['enddate'] >= TIME_NOW))
 			{
-				$bar['visible'] = 'on';
-				$bar['lang'] = 'ougc_annbars_form_visible';
+				$bar['visible'] = 'off';
+				$bar['lang'] = 'ougc_annbars_form_hidden';
+				$bar['name'] = '<i>'.$bar['name'].'</i>';
 			}
+
+			$table->construct_cell('<a href="'.$editurl.'">'.$bar['name'].'</a>');
+			$table->construct_cell(ougc_getpreview($bar['content'], 9999, true, true, array('allow_html' => 1)));
 
 			$table->construct_cell('<img src="../'.$config['admin_dir'].'/styles/default/images/icons/bullet_'.$bar['visible'].($mybb->version_code >= 1800 ? '.png' : '.gif').'" alt="'.$lang->$bar['lang'].'" title="'.$lang->$bar['lang'].'" />', array('class' => 'align_center'));
 
 			$popup = new PopupMenu('bar_'.$bar['aid'], $lang->options);
-			$popup->add_item($lang->ougc_annbars_tab_edit, $annbars->build_url(array('action' => 'edit', 'aid' => $bar['aid'])));
-			$popup->add_item($lang->ougc_annbars_tab_delete, $annbars->build_url(array('action' => 'delete', 'aid' => $bar['aid'])));
+			$popup->add_item($lang->ougc_annbars_tab_edit, $editurl);
+			$popup->add_item($lang->ougc_annbars_tab_preview, $annbars->build_url(array('action' => 'preview', 'aid' => $bar['aid'])));
+			$popup->add_item($lang->delete, $annbars->build_url(array('action' => 'delete', 'aid' => $bar['aid'])));
 			$table->construct_cell($popup->fetch(), array('class' => 'align_center'));
 
 			$table->construct_row();

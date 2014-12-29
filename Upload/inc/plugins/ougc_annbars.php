@@ -331,7 +331,9 @@ class OUGC_ANNBARS
 				'content'		=> $bar['content'],
 				'style'			=> $bar['style'],
 				'groups'		=> explode(',', $bar['groups']),
+				'visible'		=> (int)$bar['visible'],
 				'forums'		=> explode(',', $bar['forums']),
+				'scripts'		=> $bar['scripts'],
 				'enddate'		=> $bar['enddate'],
 				'enddate_day'	=> date('j', $bar['enddate']),
 				'enddate_month'	=> date('n', $bar['enddate']),
@@ -345,7 +347,9 @@ class OUGC_ANNBARS
 				'content'		=> '',
 				'style'			=> 'black',
 				'groups'		=> array(),
+				'visible'		=> 1,
 				'forums'		=> array(),
+				'scripts'		=> '',
 				'enddate'		=> TIME_NOW,
 				'enddate_day'	=> date('j', TIME_NOW),
 				'enddate_month'	=> date('n', TIME_NOW),
@@ -413,12 +417,18 @@ class OUGC_ANNBARS
 			'content'		=> $db->escape_string((isset($data['content']) ? $data['content'] : '')),
 			'style'			=> $db->escape_string((isset($data['style']) ? $data['style'] : 'black')),
 			'groups'		=> '',
+			'visible'		=> (int)$data['visible'],
 			'forums'		=> '',
+			'scripts'		=> $db->escape_string($data['scripts']),
 			'enddate'		=> TIME_NOW,
 		);
 
 		// Groups
-		if(is_array($data['groups']))
+		if($data['groups'] == -1)
+		{
+			$insert_data['groups'] = -1;
+		}
+		elseif(is_array($data['groups']))
 		{
 			$gids = array();
 			foreach($data['groups'] as $gid)
@@ -429,14 +439,18 @@ class OUGC_ANNBARS
 		}
 
 		// Forums
-		if(is_array($data['forums']))
+		if($data['forums'] == -1)
 		{
-			$fids = array();
-			foreach($data['forums'] as $fid)
+			$insert_data['forums'] = -1;
+		}
+		elseif(is_array($data['forums']))
+		{
+			$gids = array();
+			foreach($data['forums'] as $gid)
 			{
-				$fids[] = (int)$fid;
+				$gids[] = (int)$gid;
 			}
-			$insert_data['forums'] = $db->escape_string(implode(',', $fids));
+			$insert_data['forums'] = $db->escape_string(implode(',', $gids));
 		}
 
 		// Date
@@ -473,6 +487,51 @@ class OUGC_ANNBARS
 		{
 			log_admin_action();
 		}
+	}
+
+	// Log admin action
+	function parse_message($message)
+	{
+		global $mybb, $parser, $lang;
+
+		if(!is_object($parser))
+		{
+			require_once MYBB_ROOT.'inc/class_parser.php';
+			$parser = new postParser;
+		}
+
+		$message = $parser->parse_message($lang->sprintf($message, $mybb->user['username'], $mybb->settings['bbname'], $mybb->settings['bburl']), array(
+			'allow_html'		=> 1,
+			'allow_smilies'		=> 1,
+			'allow_mycode'		=> 1,
+			'filter_badwords'	=> 1,
+			'shorten_urls'		=> 0
+		));
+
+		return $message;
+	}
+
+	// Clean input
+	function clean_ints($val, $implode=false)
+	{
+		if(!is_array($val))
+		{
+			$val = (array)explode(',', $val);
+		}
+
+		foreach($val as $k => &$v)
+		{
+			$v = (int)$v;
+		}
+
+		$val = array_filter($val);
+
+		if($implode)
+		{
+			$val = (string)implode(',', $val);
+		}
+
+		return $val;
 	}
 }
 $GLOBALS['annbars'] = new OUGC_ANNBARS;
@@ -657,7 +716,9 @@ function ougc_annbars_activate()
 	if($plugins['annbars'] <= 1801)
 	{
 		$db->modify_column('ougc_annbars', 'content', 'text NOT NULL');
-		$db->add_column('ougc_annbars', 'forums', 'varchar(100) NOT NULL DEFAULT \'\'');
+		$db->field_exists('visible', 'ougc_annbars') or $db->add_column('ougc_annbars', 'visible', 'tinyint(1) NOT NULL DEFAULT \'1\'');
+		$db->field_exists('forums', 'ougc_annbars') or $db->add_column('ougc_annbars', 'forums', 'varchar(100) NOT NULL DEFAULT \'\'');
+		$db->field_exists('scripts', 'ougc_annbars') or $db->add_column('ougc_annbars', 'scripts', 'text NOT NULL');
 	}
 	/*~*~* RUN UPDATES END *~*~*/
 
@@ -696,7 +757,9 @@ function ougc_annbars_install()
 			`content` text NOT NULL,
 			`style` varchar(20) NOT NULL DEFAULT '',
 			`groups` varchar(100) NOT NULL DEFAULT '',
+			`visible` tinyint(1) NOT NULL DEFAULT '1',
 			`forums` varchar(100) NOT NULL DEFAULT '',
+			`scripts` text NOT NULL,
 			`enddate` int(10) NOT NULL DEFAULT '0',
 			PRIMARY KEY (`aid`)
 		) ENGINE=MyISAM{$db->build_create_table_collation()};"
@@ -791,15 +854,9 @@ function ougc_annbars_show(&$page)
 		$ougc_annbars = '';
 		if(is_array($bars))
 		{
-			global $parser, $lang, $templates;
+			global $lang, $templates;
 
 			$annbars->lang_load();
-
-			if(!is_object($parser))
-			{
-				require_once MYBB_ROOT.'inc/class_parser.php';
-				$parser = new postParser;
-			}
 
 			$username = $lang->guest;
 			if($mybb->user['uid'])
@@ -835,17 +892,101 @@ function ougc_annbars_show(&$page)
 			}
 			$fid = (int)$fid;
 
+			if(!empty($_SERVER['PATH_INFO']))
+			{
+				$location = htmlspecialchars_uni($_SERVER['PATH_INFO']);
+			}
+			elseif(!empty($_ENV['PATH_INFO']))
+			{
+				$location = htmlspecialchars_uni($_ENV['PATH_INFO']);
+			}
+			elseif(!empty($_ENV['PHP_SELF']))
+			{
+				$location = htmlspecialchars_uni($_ENV['PHP_SELF']);
+			}
+			else
+			{
+				$location = htmlspecialchars_uni($_SERVER['PHP_SELF']);
+			}
+
 			$count = 1;
 			foreach($bars as $key => $bar)
 			{
-				if($bar['groups'] && !is_member($bar['groups']) || $bar['enddate'] && $bar['enddate'] < TIME_NOW)
+				if(!$bar['groups'] || ($bar['groups'] != -1 && !is_member($bar['groups'])))
 				{
 					continue;
 				}
 
+				if(!$bar['visible'])
+				{
+					if($bar['forums'] != -1 && $fid && (!$bar['forums'] || my_strpos(','.$bar['forums'].',', ','.$fid.',') === false))
+					{
+						continue;
+					}
+
+					if($bar['scripts'])
+					{
+						$continue = true;
+						$scripts = explode("\n", $bar['scripts']);
+						foreach($scripts as $script)
+						{
+							if(my_strpos($script, '{|}') !== false)
+							{
+								$inputs = explode('{|}', $script);
+								$script = $inputs[0];
+								$inputs = explode('|', $inputs[1]);
+							}
+
+							if(my_strtolower($script) != my_strtolower(basename($location)))
+							{
+								continue;
+							}
+
+							$continue = false;
+
+							if($inputs)
+							{
+								foreach($inputs as $key)
+								{
+									if(my_strpos($key, '=') !== false)
+									{
+										$key = explode('=', $key);
+										$value = $key[1];
+										$key = $key[0];
+									}
+
+									if(isset($mybb->input[$key]))
+									{
+										$continue = false;
+
+										if($mybb->get_input($key) == (string)$value)
+										{
+											$continue = false;
+											break;
+										}
+
+										$continue = false;
+									}
+									else
+									{
+										$continue = true;
+									}
+								}
+							}
+						}
+
+						if($continue)
+						{
+							continue;
+						}
+					}
+					//foo.php|foo.php?value|foo.php?value,value
+					//foo.php{|}key|key=value
+				}
+
 				if($fid && $bar['forums'] != -1 && ($bar['forums'] == '' || my_strpos(','.$bar['forums'].',', ','.$fid.',') === false))
 				{
-					continue;
+					#continue;
 				}
 
 				if($count > $limit)
@@ -866,13 +1007,7 @@ function ougc_annbars_show(&$page)
 					$bar['content'] = $lang->$lang_val;
 				}
 
-				$bar['content'] = $parser->parse_message($lang->sprintf($bar['content'], $username, $mybb->settings['bbname'], $mybb->settings['bburl']), array(
-					'allow_html'		=> 1,
-					'allow_smilies'		=> 1,
-					'allow_mycode'		=> 1,
-					'filter_badwords'	=> 1,
-					'shorten_urls'		=> 0
-				));
+				$bar['content'] = $annbars->parse_message($bar['content']);
 
 				eval('$ougc_annbars .= "'.$templates->get('ougcannbars_bar').'";');
 			}
@@ -911,7 +1046,7 @@ function update_ougc_annbars()
 if(!function_exists('ougc_getpreview'))
 {
 	/**
-	 * Shorts a message to look like a preview.
+	 * Shorts a message to look like a preview. 2.0
 	 * Based off Zinga Burga's "Thread Tooltip Preview" plugin threadtooltip_getpreview() function.
 	 *
 	 * @param string Message to short.
@@ -920,7 +1055,7 @@ if(!function_exists('ougc_getpreview'))
 	 * @param bool Strip MyCode from message.
 	 * @return string Shortened message
 	**/
-	function ougc_getpreview($message, $maxlen=100, $stripquotes=true, $stripmycode=true)
+	function ougc_getpreview($message, $maxlen=100, $stripquotes=true, $stripmycode=true, $parser_options=array())
 	{
 		// Attempt to remove quotes, skip if going to strip MyCode
 		if($stripquotes && !$stripmycode)
@@ -943,14 +1078,16 @@ if(!function_exists('ougc_getpreview'))
 				$parser = new postParser;
 			}
 
-			$message = $parser->parse_message($message, array(
+			$parser_options = array_merge(array(
 				'allow_html'		=>	0,
 				'allow_mycode'		=>	1,
 				'allow_smilies'		=>	0,
 				'allow_imgcode'		=>	1,
 				'filter_badwords'	=>	1,
 				'nl2br'				=>	0
-			));
+			), $parser_options);
+
+			$message = $parser->parse_message($message, $parser_options);
 
 			// before stripping tags, try converting some into spaces
 			$message = preg_replace(array(
@@ -962,7 +1099,7 @@ if(!function_exists('ougc_getpreview'))
 		}
 
 		// convert \xA0 to spaces (reverse &nbsp;)
-		$message = trim(preg_replace(array('~ {2,}~', "~\n{2,}~"), array(' ', "\n"), strtr($message, array("\xA0" => ' ', "\r" => '', "\t" => ' '))));
+		$message = trim(preg_replace(array('~ {2,}~', "~\n{2,}~"), array(' ', "\n"), strtr($message, array(utf8_encode("\xA0") => ' ', "\r" => '', "\t" => ' '))));
 
 		// newline fix for browsers which don't support them
 		$message = preg_replace("~ ?\n ?~", " \n", $message);
@@ -974,5 +1111,45 @@ if(!function_exists('ougc_getpreview'))
 		}
 
 		return htmlspecialchars_uni($message);
+	}
+}
+
+if(!function_exists('ougc_print_selection_javascript'))
+{
+	function ougc_print_selection_javascript()
+	{
+		static $already_printed = false;
+
+		if($already_printed)
+		{
+			return;
+		}
+
+		$already_printed = true;
+
+		echo "<script type=\"text/javascript\">
+		function checkAction(id)
+		{
+			var checked = '';
+
+			$('.'+id+'_forums_groups_check').each(function(e, val)
+			{
+				if($(this).prop('checked') == true)
+				{
+					checked = $(this).val();
+				}
+			});
+
+			$('.'+id+'_forums_groups').each(function(e)
+			{
+				$(this).hide();
+			});
+
+			if($('#'+id+'_forums_groups_'+checked))
+			{
+				$('#'+id+'_forums_groups_'+checked).show();
+			}
+		}
+	</script>";
 	}
 }
