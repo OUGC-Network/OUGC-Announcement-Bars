@@ -393,7 +393,7 @@ class OUGC_ANNBARS
 			$valid = false;
 		}
 
-		if(!in_array($this->bar_data['style'], $this->styles))
+		if(!in_array($this->bar_data['style'], $this->styles) && !trim($this->bar_data['style']))
 		{
 			$this->validate_errors[] = $lang->ougc_annbars_error_invalidstyle;
 			$valid = false;
@@ -415,7 +415,7 @@ class OUGC_ANNBARS
 		$insert_data = array(
 			'name'			=> $db->escape_string((isset($data['name']) ? $data['name'] : '')),
 			'content'		=> $db->escape_string((isset($data['content']) ? $data['content'] : '')),
-			'style'			=> $db->escape_string((isset($data['style']) ? $data['style'] : 'black')),
+			'style'			=> $db->escape_string((trim($data['style']) ? trim($data['style']) : 'black')),
 			'groups'		=> '',
 			'visible'		=> (int)$data['visible'],
 			'forums'		=> '',
@@ -998,7 +998,7 @@ function ougc_annbars_show(&$page)
 
 				if(!in_array($bar['style'], $annbars->styles))
 				{
-					$bar['style'] = 'black';
+					$bar['style'] = 'custom '.htmlspecialchars_uni($bar['style']);
 				}
 
 				$lang_val = 'ougc_annbars_bar_'.$key;

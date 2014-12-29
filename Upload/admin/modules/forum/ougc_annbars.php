@@ -91,7 +91,7 @@ if($mybb->input['action'] == 'add' || $mybb->input['action'] == 'edit')
 		$page->output_nav_tabs($sub_tabs, 'ougc_annbars_edit');
 	}
 
-	foreach(array('groups', 'visible', 'forums', 'scripts') as $key)
+	foreach(array('groups', 'visible', 'forums', 'scripts', 'style') as $key)
 	{
 		if(!isset($mybb->input[$key]) && isset($bar[$key]))
 		{
@@ -99,6 +99,25 @@ if($mybb->input['action'] == 'add' || $mybb->input['action'] == 'edit')
 		}
 	}
 	unset($key);
+
+	if(!$mybb->get_input('style_picker'))
+	{
+		$mybb->input['style_picker'] = $mybb->get_input('style');
+	}
+
+	$style_checked = array('default' => '', 'custom' => '');
+	if($mybb->get_input('style_type') == 'default' || in_array($mybb->get_input('style'), $annbars->styles))
+	{
+		$mybb->input['style_type'] = 'default';
+		$mybb->input['style'] = $mybb->input['style_picker'] = $mybb->get_input('style_picker');
+		$style_checked['default'] = 'checked="checked"';
+	}
+	else
+	{
+		$mybb->input['style_type'] = 'custom';
+		$style_checked['custom'] = 'checked="checked"';
+	}
+	$annbars->bar_data['style'] = $mybb->get_input('style');
 
 	$group_checked = array('all' => '', 'custom' => '', 'none' => '');
 	if($mybb->get_input('groups_type') == 'all' || $mybb->get_input('groups', 1) == -1)
@@ -193,7 +212,17 @@ if($mybb->input['action'] == 'add' || $mybb->input['action'] == 'edit')
 
 	$form_container->output_row($lang->ougc_annbars_form_name.' <em>*</em>', $lang->ougc_annbars_form_name_d, $form->generate_text_box('name', $annbars->bar_data['name']));
 	$form_container->output_row($lang->ougc_annbars_form_content, $lang->ougc_annbars_form_content_d, $form->generate_text_area('content', $annbars->bar_data['content'], array('rows' => 10, 'cols' => 90, 'style' => 'width: auto;')));
-	$form_container->output_row($lang->ougc_annbars_form_style, $lang->ougc_annbars_form_style_d, $form->generate_select_box('style', array(
+
+	ougc_print_selection_javascript();
+
+	$style_select = "
+	<dl style=\"margin-top: 0; margin-bottom: 0; width: 100%\">
+		<dt><label style=\"display: block;\"><input type=\"radio\" name=\"style_type\" value=\"default\" {$style_checked['default']} class=\"style_forums_groups_check\" onclick=\"checkAction('style');\" style=\"vertical-align: middle;\" /> <strong>{$lang->ougc_annbars_form_style_default}</strong></label></dt>
+		<dd style=\"margin-top: 4px;\" id=\"style_forums_groups_default\" class=\"style_forums_groups\">
+			<table cellpadding=\"4\">
+				<tr>
+					<td valign=\"top\"><small>{$lang->ougc_annbars_form_style_colors}</small></td>
+					<td>".$form->generate_select_box('style_picker', array(
 		'black'		=> $lang->ougc_annbars_form_style_black,
 		'white'		=> $lang->ougc_annbars_form_style_white,
 		'red'		=> $lang->ougc_annbars_form_style_red,
@@ -202,9 +231,25 @@ if($mybb->input['action'] == 'add' || $mybb->input['action'] == 'edit')
 		'brown'		=> $lang->ougc_annbars_form_style_brown,
 		'pink'		=> $lang->ougc_annbars_form_style_pink,
 		'orange'	=> $lang->ougc_annbars_form_style_orange,
-	), $annbars->bar_data['style']));
+	), $annbars->bar_data['style'])."</td>
+				</tr>
+			</table>
+		</dd>
+		<dt><label style=\"display: block;\"><input type=\"radio\" name=\"style_type\" value=\"custom\" {$style_checked['custom']} class=\"style_forums_groups_check\" onclick=\"checkAction('style');\" style=\"vertical-align: middle;\" /> <strong>{$lang->ougc_annbars_form_custom}</strong></label></dt>
+		<dd style=\"margin-top: 4px;\" id=\"style_forums_groups_custom\" class=\"style_forums_groups\">
+			<table cellpadding=\"4\">
+				<tr>
+					<td valign=\"top\"><small>{$lang->ougc_annbars_form_custom}</small></td>
+					<td>".$form->generate_text_box('style', $annbars->bar_data['style'], array('style' => '" maxlength="20'))."</td>
+				</tr>
+			</table>
+		</dd>
+	</dl>
+	<script type=\"text/javascript\">
+		checkAction('style');
+	</script>";
 
-	ougc_print_selection_javascript();
+	$form_container->output_row($lang->ougc_annbars_form_style, $lang->ougc_annbars_form_style_d, $style_select, '', array(), array('id' => 'row_style'));
 
 	$groups_select = "
 	<dl style=\"margin-top: 0; margin-bottom: 0; width: 100%\">

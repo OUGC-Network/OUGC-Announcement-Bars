@@ -96,6 +96,8 @@ $l['ougc_annbars_success_cache'] = 'The cache was rebuild successfully.';
 $l['ougc_annbars_view_empty'] = 'There are currently no announcement bars to show.';
 
 // Styles
+$l['ougc_annbars_form_style_default'] = 'Default';
+$l['ougc_annbars_form_style_colors'] = 'Colors';
 $l['ougc_annbars_form_style_black'] = 'Black';
 $l['ougc_annbars_form_style_white'] = 'White';
 $l['ougc_annbars_form_style_red'] = 'Red';
