@@ -4,7 +4,7 @@
  *
  *   OUGC Announcement Bars plugin (/inc/languages/english/admin/ougc_annbars.php)
  *	 Author: Omar Gonzalez
- *   Copyright: © 2012 - 2013 Omar Gonzalez
+ *   Copyright: © 2012 - 2014 Omar Gonzalez
  *   
  *   Website: http://omarg.me
  *
@@ -75,8 +75,10 @@ $l['ougc_annbars_form_groups'] = 'Groups';
 $l['ougc_annbars_form_groups_d'] = 'Choose the groups to show this bar to.';
 $l['ougc_annbars_form_forums'] = 'Forums';
 $l['ougc_annbars_form_scripts'] = 'Scripts';
-$l['ougc_annbars_form_date'] = 'End Date';
-$l['ougc_annbars_form_date_d'] = 'Choose the date this bar will stop being visible.';
+$l['ougc_annbars_form_startdate'] = 'Start Date';
+$l['ougc_annbars_form_startdate_d'] = 'Choose the date this bar will being visible.';
+$l['ougc_annbars_form_enddate'] = 'End Date';
+$l['ougc_annbars_form_enddate_d'] = 'Choose the date this bar will stop being visible.';
 
 $l['ougc_annbars_button_submit'] = 'Submit';
 
@@ -85,7 +87,8 @@ $l['ougc_annbars_error_invalid'] = 'Invalid announcement bar selected.';
 $l['ougc_annbars_error_invalidname'] = 'Invalid name.';
 $l['ougc_annbars_error_invalidcontent'] = 'Invalid content.';
 $l['ougc_annbars_error_invalidstyle'] = 'Invalid style.';
-$l['ougc_annbars_error_invaliddate'] = 'Invalid date.';
+$l['ougc_annbars_error_invalidstartdate'] = 'Invalid start date.';
+$l['ougc_annbars_error_invalidenddate'] = 'Invalid end date.';
 
 $l['ougc_annbars_success_add'] = 'Announcement bar was created successfully.';
 $l['ougc_annbars_success_edit'] = 'Announcement bar was edited successfully.';
@@ -111,3 +114,4 @@ $l['ougc_annbars_form_style_orange'] = 'Orange';
 $l['admin_log_forum_ougc_annbars_add'] = 'OUGC Announcement Bars: "{1}" added (AID: {2}).';
 $l['admin_log_forum_ougc_annbars_edit'] = 'OUGC Announcement Bars: "{1}" edited (AID: {2}).';
 $l['admin_log_forum_ougc_annbars_delete'] = 'OUGC Announcement Bars: bar deleted.';
+$l['task_ougc_annbars_ran'] = 'The OUGC Announcement Bars task successfully ran.';

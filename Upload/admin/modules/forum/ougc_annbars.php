@@ -4,7 +4,7 @@
  *
  *   OUGC Announcement Bars plugin (/admin/modules/forum/ougc_annbars.php)
  *	 Author: Omar Gonzalez
- *   Copyright: © 2012 - 2013 Omar Gonzalez
+ *   Copyright: © 2012 - 2014 Omar Gonzalez
  *   
  *   Website: http://omarg.me
  *
@@ -191,7 +191,8 @@ if($mybb->input['action'] == 'add' || $mybb->input['action'] == 'edit')
 				$lang_var = 'ougc_annbars_success_edit';
 			}
 			$annbars->log_action();
-			$annbars->admin_redirect($lang->$lang_var, !$annbars->update_cache());
+			$annbars->update_cache();
+			$annbars->admin_redirect($lang->{$lang_var});
 		}
 		else
 		{
@@ -311,7 +312,8 @@ if($mybb->input['action'] == 'add' || $mybb->input['action'] == 'edit')
 	</script>";
 
 	$form_container->output_row($lang->ougc_annbars_form_visible.' <em>*</em>', $lang->ougc_annbars_form_visible_d, $visible_select, '', array(), array('id' => 'row_visible'));
-	$form_container->output_row($lang->ougc_annbars_form_date." <em>*</em>", $lang->ougc_annbars_form_date_d, $form->generate_date_select('enddate', $annbars->bar_data['enddate_day'], $annbars->bar_data['enddate_month'], $annbars->bar_data['enddate_year']));
+	$form_container->output_row($lang->ougc_annbars_form_startdate." <em>*</em>", $lang->ougc_annbars_form_startdate_d, $form->generate_date_select('startdate', $annbars->bar_data['startdate_day'], $annbars->bar_data['startdate_month'], $annbars->bar_data['startdate_year']));
+	$form_container->output_row($lang->ougc_annbars_form_enddate." <em>*</em>", $lang->ougc_annbars_form_enddate_d, $form->generate_date_select('enddate', $annbars->bar_data['enddate_day'], $annbars->bar_data['enddate_month'], $annbars->bar_data['enddate_year']));
 
 	$form_container->end();
 
@@ -409,6 +411,10 @@ else
 	}
 	else
 	{
+		// Update the cache
+		$annbars->update_cache();
+		include_once MYBB_ROOT.'inc/tasks/ougc_annbars.php';
+
 		$query = $db->simple_select('ougc_annbars', '*', '', array('limit' => $perpage, 'limit_start' => $start, 'order_by' => 'aid'));
 
 		while($bar = $db->fetch_array($query))
@@ -418,7 +424,7 @@ else
 			$bar['visible'] = 'on';
 			$bar['lang'] = 'ougc_annbars_form_visible';
 			$bar['name'] = htmlspecialchars_uni($bar['name']);
-			if(!($bar['enddate'] >= TIME_NOW))
+			if($bar['startdate'] > TIME_NOW || $bar['enddate'] <= TIME_NOW)
 			{
 				$bar['visible'] = 'off';
 				$bar['lang'] = 'ougc_annbars_form_hidden';
@@ -428,7 +434,7 @@ else
 			$table->construct_cell('<a href="'.$editurl.'">'.$bar['name'].'</a>');
 			$table->construct_cell(ougc_getpreview($bar['content'], 9999, true, true, array('allow_html' => 1)));
 
-			$table->construct_cell('<img src="../'.$config['admin_dir'].'/styles/default/images/icons/bullet_'.$bar['visible'].($mybb->version_code >= 1800 ? '.png' : '.gif').'" alt="'.$lang->$bar['lang'].'" title="'.$lang->$bar['lang'].'" />', array('class' => 'align_center'));
+			$table->construct_cell('<img src="../'.$config['admin_dir'].'/styles/default/images/icons/bullet_'.$bar['visible'].($mybb->version_code >= 1800 ? '.png' : '.gif').'" alt="'.$lang->{$bar['lang']}.'" title="'.$lang->{$bar['lang']}.'" />', array('class' => 'align_center'));
 
 			$popup = new PopupMenu('bar_'.$bar['aid'], $lang->options);
 			$popup->add_item($lang->ougc_annbars_tab_edit, $editurl);
