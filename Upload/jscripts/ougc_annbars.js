@@ -1,8 +1,6 @@
-<?php
-
 /***************************************************************************
  *
- *	OUGC Announcement Bars plugin (/inc/tasks/ougc_annbars.php)
+ *	OUGC Announcement Bars plugin (/jscripts/ougc_annbars.js)
  *	Author: Omar Gonzalez
  *	Copyright: © 2012 - 2016 Omar Gonzalez
  *
@@ -27,17 +25,25 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ****************************************************************************/
 
-function task_threadviews($task)
-{
-	global $annbars;
+var OUGC_Plugins = OUGC_Plugins || {};
 
-	if(!($annbars instanceof OUGC_ANNBARS))
+$.extend(true, OUGC_Plugins, {
+	initAlertsSystem: function()
 	{
-		$annbars = new OUGC_ANNBARS;
-	}
+		$('div[id^="ougcannbars_bar_"]').each(function () {
+			var id = $(this).attr('id');
 
-	$annbars->lang_load();
-	$annbars->update_cache();
+			if(Cookie.get(id)) {
+				$('#' + id).hide();
+			}
 
-	add_task_log($task, $lang->task_ougc_annbars_ran);
-}
+			$('#' + id + ' .dismiss_notice').on('click', function() {
+				$('#' + id).fadeOut(250, function () {
+					Cookie.set(id, 7);
+				});
+			});
+		});
+	},
+});
+
+OUGC_Plugins.initAlertsSystem();

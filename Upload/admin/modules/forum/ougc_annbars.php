@@ -2,27 +2,27 @@
 
 /***************************************************************************
  *
- *   OUGC Announcement Bars plugin (/admin/modules/forum/ougc_annbars.php)
- *	 Author: Omar Gonzalez
- *   Copyright: © 2012 - 2014 Omar Gonzalez
- *   
- *   Website: http://omarg.me
+ *	OUGC Announcement Bars plugin (/admin/modules/forum/ougc_annbars.php)
+ *	Author: Omar Gonzalez
+ *	Copyright: © 2012 - 2016 Omar Gonzalez
  *
- *   This plugin will allow administrators and super moderators to manage announcement bars.
+ *	Website: http://omarg.me
+ *
+ *	This plugin will allow administrators and super moderators to manage announcement bars.
  *
  ***************************************************************************
- 
+
 ****************************************************************************
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
 	(at your option) any later version.
-	
+
 	This program is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
-	
+
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ****************************************************************************/
@@ -106,7 +106,7 @@ if($mybb->input['action'] == 'add' || $mybb->input['action'] == 'edit')
 	}
 
 	$style_checked = array('default' => '', 'custom' => '');
-	if($mybb->get_input('style_type') == 'default' || in_array($mybb->get_input('style'), $annbars->styles))
+	if($mybb->get_input('style_type') == 'default' || in_array($mybb->get_input('style'), $annbars->styles) || ($add && $mybb->request_method != 'post'))
 	{
 		$mybb->input['style_type'] = 'default';
 		$mybb->input['style'] = $mybb->input['style_picker'] = $mybb->get_input('style_picker');
@@ -120,7 +120,7 @@ if($mybb->input['action'] == 'add' || $mybb->input['action'] == 'edit')
 	$annbars->bar_data['style'] = $mybb->get_input('style');
 
 	$group_checked = array('all' => '', 'custom' => '', 'none' => '');
-	if($mybb->get_input('groups_type') == 'all' || $mybb->get_input('groups', 1) == -1)
+	if($mybb->get_input('groups_type') == 'all' || $mybb->get_input('groups', 1) == -1 || ($add && $mybb->request_method != 'post'))
 	{
 		$mybb->input['groups_type'] = 'all';
 		$mybb->input['groups'] = -1;
@@ -141,7 +141,7 @@ if($mybb->input['action'] == 'add' || $mybb->input['action'] == 'edit')
 	$annbars->bar_data['groups'] = $mybb->input['groups'];
 
 	$visible_checked = array('everywhere' => '', 'custom' => '');
-	if($mybb->get_input('visible_type') == 'everywhere' || $mybb->get_input('visible', 1) == 1)
+	if($mybb->get_input('visible_type') == 'everywhere' || $mybb->get_input('visible', 1) == 1 || ($add && $mybb->request_method != 'post'))
 	{
 		$mybb->input['visible_type'] = 'everywhere';
 		$mybb->input['visible'] = 1;
@@ -156,7 +156,7 @@ if($mybb->input['action'] == 'add' || $mybb->input['action'] == 'edit')
 	$annbars->bar_data['visible'] = $mybb->input['visible'];
 
 	$forum_checked = array('all' => '', 'custom' => '', 'none' => '');
-	if($mybb->get_input('forums_type') == 'all' || $mybb->get_input('forums', 1) == -1)
+	if($mybb->get_input('forums_type') == 'all' || $mybb->get_input('forums', 1) == -1 || ($add && $mybb->request_method != 'post'))
 	{
 		$mybb->input['forums_type'] = 'all';
 		$mybb->input['forums'] = -1;
@@ -432,7 +432,7 @@ else
 			}
 
 			$table->construct_cell('<a href="'.$editurl.'">'.$bar['name'].'</a>');
-			$table->construct_cell(ougc_getpreview($bar['content'], 9999, true, true, array('allow_html' => 1)));
+			$table->construct_cell(ougc_getpreview($bar['content'], 350, true, true, array('allow_html' => 1)));
 
 			$table->construct_cell('<img src="../'.$config['admin_dir'].'/styles/default/images/icons/bullet_'.$bar['visible'].($mybb->version_code >= 1800 ? '.png' : '.gif').'" alt="'.$lang->{$bar['lang']}.'" title="'.$lang->{$bar['lang']}.'" />', array('class' => 'align_center'));
 
@@ -449,7 +449,7 @@ else
 		$annbars->set_url('index.php');
 
 		// Multipage
-		if(($multipage = trim(draw_admin_pagination($mybb->input['page'], $perpage, $barscount, $annbars->build_url(false, 'page')))))
+		if($multipage = trim(draw_admin_pagination($mybb->input['page'], $perpage, $barscount, $annbars->build_url(false, 'page'))))
 		{
 			echo $multipage;
 		}

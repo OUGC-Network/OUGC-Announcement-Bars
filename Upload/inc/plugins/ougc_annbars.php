@@ -2,27 +2,27 @@
 
 /***************************************************************************
  *
- *   OUGC Announcement Bars plugin (/inc/plugins/ougc_annbars.php)
- *	 Author: Omar Gonzalez
- *   Copyright: © 2012 - 2014 Omar Gonzalez
- *   
- *   Website: http://omarg.me
+ *	OUGC Announcement Bars plugin (/inc/plugins/ougc_annbars.php)
+ *	Author: Omar Gonzalez
+ *	Copyright: © 2012 - 2016 Omar Gonzalez
  *
- *   This plugin will allow administrators and super moderators to manage announcement bars.
+ *	Website: http://omarg.me
+ *
+ *	This plugin will allow administrators and super moderators to manage announcement bars.
  *
  ***************************************************************************
- 
+
 ****************************************************************************
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
 	(at your option) any later version.
-	
+
 	This program is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
-	
+
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ****************************************************************************/
@@ -61,7 +61,7 @@ else
 		$templatelist = '';
 	}
 
-	$templatelist .= 'ougcannbars_bar';
+	$templatelist .= 'ougcannbars_bar, ougcannbars_wrapper';
 
 	$plugins->add_hook('pre_output_page', 'ougc_annbars_show');
 }
@@ -78,9 +78,10 @@ function ougc_annbars_info()
 		'website'		=> 'http://omarg.me',
 		'author'		=> 'Omar G.',
 		'authorsite'	=> 'http://omarg.me',
-		'version'		=> '1.8.0',
-		'versioncode'	=> 1800,
+		'version'		=> '1.8.6',
+		'versioncode'	=> 1806,
 		'compatibility'	=> '18*',
+		'codename'		=> 'ougc_annbars',
 		'pl'			=> array(
 			'version'	=> 12,
 			'url'		=> 'http://mods.mybb.com/view/pluginlibrary'
@@ -490,7 +491,7 @@ class OUGC_ANNBARS
 			$k = $key.'date_';
 			if(isset($data[$k.'month']) && isset($data[$k.'day']) && isset($data[$k.'year']))
 			{
-				$insert_data[$key.'date'] = $this->_mktime($data[$k.'day'], $data[$k.'month'], $data[$k.'year']);
+				$insert_data[$key.'date'] = $this->_mktime($data[$k.'month'], $data[$k.'day'], $data[$k.'year']);
 			}
 		}
 
@@ -571,7 +572,8 @@ class OUGC_ANNBARS
 
 	function _mktime($month, $day, $year)
 	{
-		return (int)mktime(date('H', TIME_NOW), date('i', TIME_NOW), date('s', TIME_NOW), $month, $day, $year);
+		return (int)mktime(0, 0, 0, (int)$month, (int)$day, (int)$year);
+		//return (int)mktime(date('H', TIME_NOW), date('i', TIME_NOW), date('s', TIME_NOW), $month, $day, $year);
 	}
 
 	function update_task($action=2)
@@ -775,9 +777,12 @@ function ougc_annbars_activate()
 </div><br/>'
 	));*/
 	$PL->templates('ougcannbars', $lang->ougc_annbars_plugin, array(
-		'bar'	=> '<div class="ougc_annbars_{$bar[\'style\']}">
+		'bar'		=> '<div class="ougc_annbars_{$bar[\'style\']}" id="ougcannbars_bar_{$key}">
+	<div class="float_right dismiss_notice"><img src="{$theme[\'imgdir\']}/dismiss_notice.png" alt="{$lang->dismiss_notice}" title="{$lang->dismiss_notice}" /></div>
 	{$bar[\'content\']}
-</div><br/>'
+</div><br/>',
+		'wrapper'	=> '{$ougc_annbars}
+<script type="text/javascript" src="{$mybb->settings[\'bburl\']}/jscripts/ougc_annbars.js?ver=1806"></script>'
 	));
 
 	// Update administrator permissions
@@ -944,10 +949,10 @@ function ougc_annbars_show(&$page)
 		return;
 	}
 
-	global $mybb;
+	global $mybb, $theme;
 
 	$limit = (isset($mybb->settings['ougc_annbars_limit']) ? (int)$mybb->settings['ougc_annbars_limit'] : 0);
-	if($limit > 0)
+	if($limit >= 0)
 	{
 		global $PL, $annbars;
 		$PL or require_once PLUGINLIBRARY;
@@ -1014,7 +1019,7 @@ function ougc_annbars_show(&$page)
 			$count = 1;
 			foreach($bars as $key => $bar)
 			{
-				if($count > $limit)
+				if($limit != 0 && $count > $limit)
 				{
 					break;
 				}
@@ -1026,12 +1031,16 @@ function ougc_annbars_show(&$page)
 
 				if(!$bar['visible'])
 				{
-					if($bar['forums'] != -1 && $fid && (!$bar['forums'] || my_strpos(','.$bar['forums'].',', ','.$fid.',') === false))
+					$valid_forum = false;
+					if($bar['forums'] && $fid)
 					{
-						continue;
+						if($bar['forums'] == -1 || my_strpos(','.$bar['forums'].',', ','.$fid.',') !== false)
+						{
+							$valid_forum = true;
+						}
 					}
 
-					if($bar['scripts'])
+					if($bar['scripts'] && !$valid_forum)
 					{
 						$continue = true;
 						$scripts = explode("\n", $bar['scripts']);
@@ -1113,6 +1122,11 @@ function ougc_annbars_show(&$page)
 
 				eval('$ougc_annbars .= "'.$templates->get('ougcannbars_bar').'";');
 			}
+		}
+
+		if($ougc_annbars)
+		{
+			$ougc_annbars = eval($templates->render('ougcannbars_wrapper'));
 		}
 
 		return str_replace('<!--OUGC_ANNBARS-->', $ougc_annbars, $page);
