@@ -2,7 +2,7 @@
 
 /***************************************************************************
  *
- *	OUGC Announcement Bars plugin (/inc/languages/english/ougc_annbars.php)
+ *	OUGC Announcement Bars plugin (/inc/tasks/ougc_annbars.php)
  *	Author: Omar Gonzalez
  *	Copyright: © 2012 - 2016 Omar Gonzalez
  *
@@ -27,10 +27,17 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ****************************************************************************/
 
-// Logs
-$l['task_ougc_annbars_ran'] = 'The OUGC Announcement Bars task successfully ran.';
+function task_threadviews($task)
+{
+	global $annbars;
 
-// You can change bars contents by announcement id, for example, if you uncomment next line it will show up as the content of bar which id is 5.
-//$l['ougc_annbars_bar_5'] = '<strong>Title:</strong> Hi {1}, you are visiting [url={3}]{2}[/url].';
+	if(!($annbars instanceof OUGC_ANNBARS))
+	{
+		$annbars = new OUGC_ANNBARS;
+	}
 
-//$l['ougc_annbars_bar_AID'] = '<strong>{1}!!</strong> Click [u][url={3}]here[/url][/u] to be the first one that actually clicked it!.';
+	$annbars->lang_load();
+	$annbars->update_cache();
+
+	add_task_log($task, $lang->task_ougc_annbars_ran);
+}

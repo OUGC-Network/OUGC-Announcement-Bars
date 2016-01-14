@@ -1,8 +1,6 @@
-<?php
-
 /***************************************************************************
  *
- *	OUGC Announcement Bars plugin (/inc/languages/english/ougc_annbars.php)
+ *	OUGC Announcement Bars plugin (/jscripts/ougc_annbars.js)
  *	Author: Omar Gonzalez
  *	Copyright: © 2012 - 2016 Omar Gonzalez
  *
@@ -27,10 +25,25 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ****************************************************************************/
 
-// Logs
-$l['task_ougc_annbars_ran'] = 'The OUGC Announcement Bars task successfully ran.';
+var OUGC_Plugins = OUGC_Plugins || {};
 
-// You can change bars contents by announcement id, for example, if you uncomment next line it will show up as the content of bar which id is 5.
-//$l['ougc_annbars_bar_5'] = '<strong>Title:</strong> Hi {1}, you are visiting [url={3}]{2}[/url].';
+$.extend(true, OUGC_Plugins, {
+	initAlertsSystem: function()
+	{
+		$('div[id^="ougcannbars_bar_"]').each(function () {
+			var id = $(this).attr('id');
 
-//$l['ougc_annbars_bar_AID'] = '<strong>{1}!!</strong> Click [u][url={3}]here[/url][/u] to be the first one that actually clicked it!.';
+			if(Cookie.get(id)) {
+				$('#' + id).hide();
+			}
+
+			$('#' + id + ' .dismiss_notice').on('click', function() {
+				$('#' + id).fadeOut(250, function () {
+					Cookie.set(id, 7);
+				});
+			});
+		});
+	},
+});
+
+OUGC_Plugins.initAlertsSystem();
