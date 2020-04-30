@@ -149,10 +149,10 @@ class OUGC_ANNBARS
 				'visible'	=> "tinyint(1) NOT NULL DEFAULT '1'",
 				'forums'	=> "varchar(100) NOT NULL DEFAULT ''",
 				'scripts'	=> "text NOT NULL",
-				'frules'	=> "tinyint(1) NOT NULL DEFAULT '1'",
+				'frules'	=> "tinyint(1) NOT NULL DEFAULT '0'",
 				'frules_fid'	=> "varchar(100) NOT NULL DEFAULT ''",
 				'frules_closed'	=> "tinyint(1) NOT NULL DEFAULT '0'",
-				'frules_dateline'	=> "tinyint(5) NOT NULL DEFAULT '1'",
+				'frules_dateline'	=> "int(10) NOT NULL DEFAULT '1'",
 				'startdate'	=> "int(10) NOT NULL DEFAULT '0'",
 				'enddate'	=> "int(10) NOT NULL DEFAULT '0'",
 				'prymary_key'	=> "aid"
@@ -1151,15 +1151,18 @@ function ougc_annbars_show(&$page)
 
 					$fids = implode("','", array_map('intval', explode(',', $bar['frules_fid'])));
 
-					$closed = (int)$bar['frules_closed'] ? (int)$bar['frules_closed'] : '';
-
 					$thread_time_limit = TIME_NOW - 60 * 60 * 24 * 7 * (int)$bar['frules_dateline'];
 
 					$where = array(
 						'fid' => "fid IN ('{$fids}')",
-						'closed' => "closed='{$closed}'",
+						'closed' => "closed NOT LIKE 'moved|%'",
 						'dateline' => "dateline>'{$thread_time_limit}'",
 					);
+
+					if($bar['frules_closed'])
+					{
+						$where['closed'] = "closed='1'";
+					}
 
 					$query = $db->simple_select('threads', 'COUNT(tid) AS total_threads', implode(' AND ', $where), array('limit' => 1));
 
