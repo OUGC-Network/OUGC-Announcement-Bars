@@ -4,9 +4,9 @@
  *
  *	OUGC Announcement Bars plugin (/admin/modules/forum/ougc_annbars.php)
  *	Author: Omar Gonzalez
- *	Copyright: © 2012 - 2016 Omar Gonzalez
+ *	Copyright: © 2012 - 2020 Omar Gonzalez
  *
- *	Website: http://omarg.me
+ *	Website: https://ougc.network
  *
  *	This plugin will allow administrators and super moderators to manage announcement bars.
  *
@@ -91,7 +91,7 @@ if($mybb->input['action'] == 'add' || $mybb->input['action'] == 'edit')
 		$page->output_nav_tabs($sub_tabs, 'ougc_annbars_edit');
 	}
 
-	foreach(array('groups', 'visible', 'forums', 'scripts', 'style') as $key)
+	foreach(array('groups', 'visible', 'forums', 'scripts', 'frules', 'frules_fid', 'frules_closed', 'frules_dateline', 'style') as $key)
 	{
 		if(!isset($mybb->input[$key]) && isset($bar[$key]))
 		{
@@ -212,7 +212,7 @@ if($mybb->input['action'] == 'add' || $mybb->input['action'] == 'edit')
 	}
 
 	$form_container->output_row($lang->ougc_annbars_form_name.' <em>*</em>', $lang->ougc_annbars_form_name_d, $form->generate_text_box('name', $annbars->bar_data['name']));
-	$form_container->output_row($lang->ougc_annbars_form_content, $lang->ougc_annbars_form_content_d, $form->generate_text_area('content', $annbars->bar_data['content'], array('rows' => 10, 'cols' => 90, 'style' => 'width: auto;')));
+	$form_container->output_row($lang->ougc_annbars_form_content.' <em>*</em>', $lang->ougc_annbars_form_content_d, $form->generate_text_area('content', $annbars->bar_data['content'], array('rows' => 10, 'cols' => 90, 'style' => 'width: auto;')));
 
 	ougc_print_selection_javascript();
 
@@ -270,7 +270,7 @@ if($mybb->input['action'] == 'add' || $mybb->input['action'] == 'edit')
 		checkAction('groups');
 	</script>";
 
-	$form_container->output_row($lang->ougc_annbars_form_groups.' <em>*</em>', $lang->ougc_annbars_form_groups_d, $groups_select, '', array(), array('id' => 'row_groups'));
+	$form_container->output_row($lang->ougc_annbars_form_groups, $lang->ougc_annbars_form_groups_d, $groups_select, '', array(), array('id' => 'row_groups'));
 
 	$forums_select = "
 	<dl style=\"margin-top: 0; margin-bottom: 0; width: 100%\">
@@ -311,9 +311,14 @@ if($mybb->input['action'] == 'add' || $mybb->input['action'] == 'edit')
 		checkAction('visible');
 	</script>";
 
-	$form_container->output_row($lang->ougc_annbars_form_visible.' <em>*</em>', $lang->ougc_annbars_form_visible_d, $visible_select, '', array(), array('id' => 'row_visible'));
+	$form_container->output_row($lang->ougc_annbars_form_visible, $lang->ougc_annbars_form_visible_d, $visible_select, '', array(), array('id' => 'row_visible'));
 	$form_container->output_row($lang->ougc_annbars_form_startdate." <em>*</em>", $lang->ougc_annbars_form_startdate_d, $form->generate_date_select('startdate', $annbars->bar_data['startdate_day'], $annbars->bar_data['startdate_month'], $annbars->bar_data['startdate_year']));
 	$form_container->output_row($lang->ougc_annbars_form_enddate." <em>*</em>", $lang->ougc_annbars_form_enddate_d, $form->generate_date_select('enddate', $annbars->bar_data['enddate_day'], $annbars->bar_data['enddate_month'], $annbars->bar_data['enddate_year']));
+
+	$form_container->output_row($lang->ougc_annbars_form_frules, $lang->ougc_annbars_form_frules_d, $form->generate_yes_no_radio('frules', $annbars->bar_data['frules']));
+	$form_container->output_row($lang->ougc_annbars_form_frules_fid, $lang->ougc_annbars_form_frules_fid_d, $form->generate_forum_select('frules_fid[]', $annbars->bar_data['frules_fid'], array('multiple' => true)));
+	$form_container->output_row($lang->ougc_annbars_form_frules_closed, $lang->ougc_annbars_form_frules_closed_d, $form->generate_yes_no_radio('frules_closed', $annbars->bar_data['frules_closed']));
+	$form_container->output_row($lang->ougc_annbars_form_frules_dateline, $lang->ougc_annbars_form_frules_dateline_d, $form->generate_text_box('frules_dateline', $annbars->bar_data['frules_dateline']));
 
 	$form_container->end();
 
