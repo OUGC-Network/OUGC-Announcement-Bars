@@ -4,9 +4,9 @@
  *
  *	OUGC Announcement Bars plugin (/inc/tasks/ougc_annbars.php)
  *	Author: Omar Gonzalez
- *	Copyright: © 2012 - 2016 Omar Gonzalez
+ *	Copyright: © 2012 - 2020 Omar Gonzalez
  *
- *	Website: http://omarg.me
+ *	Website: https://ougc.network
  *
  *	This plugin will allow administrators and super moderators to manage announcement bars.
  *

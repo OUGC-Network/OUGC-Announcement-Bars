@@ -4,9 +4,9 @@
  *
  *	OUGC Announcement Bars plugin (/inc/languages/english/admin/ougc_annbars.php)
  *	Author: Omar Gonzalez
- *	Copyright: © 2012 - 2016 Omar Gonzalez
+ *	Copyright: © 2012 - 2020 Omar Gonzalez
  *
- *	Website: http://omarg.me
+ *	Website: https://ougc.network
  *
  *	This plugin will allow administrators and super moderators to manage announcement bars.
  *
@@ -64,7 +64,10 @@ $l['ougc_annbars_form_content'] = 'Content';
 $l['ougc_annbars_form_content_d'] = 'Write a the content of this bar.<br />
 {1} => Current user username.<br />
 {2} => Forum name.<br />
-{3} => Forum URL.';
+{3} => Forum URL.<br />
+{4} => Start date.<br />
+{5} => End date.<br />
+{6} => Thread count (if rules are enabled).';
 $l['ougc_annbars_form_visible'] = 'Visible';
 $l['ougc_annbars_form_everywhere'] = 'Everywhere';
 $l['ougc_annbars_form_custom'] = 'Custom';
@@ -79,6 +82,13 @@ $l['ougc_annbars_form_startdate'] = 'Start Date';
 $l['ougc_annbars_form_startdate_d'] = 'Choose the date this bar will being visible.';
 $l['ougc_annbars_form_enddate'] = 'End Date';
 $l['ougc_annbars_form_enddate_d'] = 'Choose the date this bar will stop being visible.';
+$l['ougc_annbars_form_frules'] = 'Display on Forum Rules';
+$l['ougc_annbars_form_frules_d'] = 'You can decide to display this bar only if there are threads that meet a specific criteria.';
+$l['ougc_annbars_form_frules_fid'] = 'Forum';
+$l['ougc_annbars_form_frules_closed'] = 'Closed Threads';
+$l['ougc_annbars_form_frules_closed_d'] = 'If selected only closed threads will account.';
+$l['ougc_annbars_form_frules_dateline'] = 'Date Cut';
+$l['ougc_annbars_form_frules_dateline_d'] = 'Threads older than <i>n</i> weeks will not account.';
 
 $l['ougc_annbars_button_submit'] = 'Submit';
 

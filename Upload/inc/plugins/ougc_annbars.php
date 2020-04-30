@@ -4,9 +4,9 @@
  *
  *	OUGC Announcement Bars plugin (/inc/plugins/ougc_annbars.php)
  *	Author: Omar Gonzalez
- *	Copyright: © 2012 - 2016 Omar Gonzalez
+ *	Copyright: © 2012 - 2020 Omar Gonzalez
  *
- *	Website: http://omarg.me
+ *	Website: https://ougc.network
  *
  *	This plugin will allow administrators and super moderators to manage announcement bars.
  *
@@ -75,16 +75,16 @@ function ougc_annbars_info()
 	return array(
 		'name'			=> 'OUGC Announcement Bars',
 		'description'	=> $lang->ougc_annbars_plugin_d,
-		'website'		=> 'http://omarg.me',
+		'website'		=> 'https://ougc.network',
 		'author'		=> 'Omar G.',
-		'authorsite'	=> 'http://omarg.me',
-		'version'		=> '1.8.6',
-		'versioncode'	=> 1806,
+		'authorsite'	=> 'https://ougc.network',
+		'version'		=> '1.8.20',
+		'versioncode'	=> 1820,
 		'compatibility'	=> '18*',
 		'codename'		=> 'ougc_annbars',
 		'pl'			=> array(
-			'version'	=> 12,
-			'url'		=> 'http://mods.mybb.com/view/pluginlibrary'
+			'version'	=> 13,
+			'url'		=> 'https://community.mybb.com/mods.php?action=view&pid=573'
 		)
 	);
 }
@@ -129,6 +129,83 @@ class OUGC_ANNBARS
 		else
 		{
 			$lang->load('ougc_annbars', false, true);
+		}
+	}
+
+	// List of tables
+	function _db_tables()
+	{
+		global $db;
+
+		$collation = $db->build_create_table_collation();
+
+		$tables = array(
+			'ougc_annbars'	=> array(
+				'aid'	=> "bigint(30) UNSIGNED NOT NULL AUTO_INCREMENT",
+				'name'	=> "varchar(100) NOT NULL DEFAULT ''",
+				'content'	=> "text NOT NULL",
+				'style'	=> "varchar(20) NOT NULL DEFAULT ''",
+				'groups'	=> "varchar(100) NOT NULL DEFAULT ''",
+				'visible'	=> "tinyint(1) NOT NULL DEFAULT '1'",
+				'forums'	=> "varchar(100) NOT NULL DEFAULT ''",
+				'scripts'	=> "text NOT NULL",
+				'frules'	=> "tinyint(1) NOT NULL DEFAULT '1'",
+				'frules_fid'	=> "varchar(100) NOT NULL DEFAULT ''",
+				'frules_closed'	=> "tinyint(1) NOT NULL DEFAULT '0'",
+				'frules_dateline'	=> "tinyint(5) NOT NULL DEFAULT '1'",
+				'startdate'	=> "int(10) NOT NULL DEFAULT '0'",
+				'enddate'	=> "int(10) NOT NULL DEFAULT '0'",
+				'prymary_key'	=> "aid"
+			)
+		);
+
+		return $tables;
+	}
+
+	// Verify DB tables
+	function _db_verify_tables()
+	{
+		global $db;
+
+		$collation = $db->build_create_table_collation();
+		foreach($this->_db_tables() as $table => $fields)
+		{
+			if($db->table_exists($table))
+			{
+				foreach($fields as $field => $definition)
+				{
+					if($field == 'prymary_key')
+					{
+						continue;
+					}
+
+					if($db->field_exists($field, $table))
+					{
+						$db->modify_column($table, "`{$field}`", $definition);
+					}
+					else
+					{
+						$db->add_column($table, $field, $definition);
+					}
+				}
+			}
+			else
+			{
+				$query = "CREATE TABLE IF NOT EXISTS `".TABLE_PREFIX."{$table}` (";
+				foreach($fields as $field => $definition)
+				{
+					if($field == 'prymary_key')
+					{
+						$query .= "PRIMARY KEY (`{$definition}`)";
+					}
+					else
+					{
+						$query .= "`{$field}` {$definition},";
+					}
+				}
+				$query .= ") ENGINE=MyISAM{$collation};";
+				$db->write_query($query);
+			}
 		}
 	}
 
@@ -344,6 +421,10 @@ class OUGC_ANNBARS
 				'visible'			=> (int)$bar['visible'],
 				'forums'			=> explode(',', $bar['forums']),
 				'scripts'			=> $bar['scripts'],
+				'frules'			=> (int)$bar['frules'],
+				'frules_fid'		=> explode(',', $bar['frules_fid']),
+				'frules_closed'		=> (int)$bar['frules_closed'],
+				'frules_dateline'	=> (int)$bar['frules_dateline'],
 				'startdate'			=> $bar['startdate'],
 				'startdate_day'		=> date('j', $bar['startdate']),
 				'startdate_month'	=> date('n', $bar['startdate']),
@@ -364,6 +445,10 @@ class OUGC_ANNBARS
 				'visible'			=> 1,
 				'forums'			=> array(),
 				'scripts'			=> '',
+				'frules'			=> 0,
+				'frules_fid'		=> array(),
+				'frules_closed'		=> 0,
+				'frules_dateline'	=> 1,
 				'startdate'			=> TIME_NOW,
 				'startdate_day'		=> date('j', TIME_NOW),
 				'startdate_month'	=> date('n', TIME_NOW),
@@ -444,15 +529,19 @@ class OUGC_ANNBARS
 		global $db;
 
 		$insert_data = array(
-			'name'			=> $db->escape_string((isset($data['name']) ? $data['name'] : '')),
-			'content'		=> $db->escape_string((isset($data['content']) ? $data['content'] : '')),
-			'style'			=> $db->escape_string((trim($data['style']) ? trim($data['style']) : 'black')),
-			'groups'		=> '',
-			'visible'		=> (int)$data['visible'],
-			'forums'		=> '',
-			'scripts'		=> $db->escape_string($data['scripts']),
-			'startdate'		=> TIME_NOW,
-			'enddate'		=> TIME_NOW
+			'name'				=> $db->escape_string((isset($data['name']) ? $data['name'] : '')),
+			'content'			=> $db->escape_string((isset($data['content']) ? $data['content'] : '')),
+			'style'				=> $db->escape_string((trim($data['style']) ? trim($data['style']) : 'black')),
+			'groups'			=> '',
+			'visible'			=> (int)$data['visible'],
+			'forums'			=> '',
+			'scripts'			=> $db->escape_string($data['scripts']),
+			'frules'			=> (int)$data['frules'],
+			'frules_fid'		=> '',
+			'frules_closed'		=> (int)$data['frules_closed'],
+			'frules_dateline'	=> (int)$data['frules_dateline'],
+			'startdate'			=> TIME_NOW,
+			'enddate'			=> TIME_NOW
 		);
 
 		// Groups
@@ -483,6 +572,11 @@ class OUGC_ANNBARS
 				$gids[] = (int)$gid;
 			}
 			$insert_data['forums'] = $db->escape_string(implode(',', $gids));
+		}
+	
+		if(isset($data['frules_fid']))
+		{
+			$insert_data['frules_fid'] = $db->escape_string(implode(',', (array)$data['frules_fid']));
 		}
 
 		// Date
@@ -526,7 +620,7 @@ class OUGC_ANNBARS
 	}
 
 	// Log admin action
-	function parse_message($message, $startdate=TIME_NOW, $enddate=TIME_NOW)
+	function parse_message($message, $startdate=TIME_NOW, $enddate=TIME_NOW, $threads_count='')
 	{
 		global $mybb, $parser, $lang;
 
@@ -536,7 +630,7 @@ class OUGC_ANNBARS
 			$parser = new postParser;
 		}
 
-		$message = $parser->parse_message($lang->sprintf($message, $mybb->user['username'], $mybb->settings['bbname'], $mybb->settings['bburl'], my_date($mybb->settings['dateformat'], $startdate)/*.', '.my_date($mybb->settings['timeformat'], $startdate)*/, my_date($mybb->settings['dateformat'], $enddate)/*.', '.my_date($mybb->settings['timeformat'], $enddate)*/), array(
+		$message = $parser->parse_message($lang->sprintf($message, $mybb->user['username'], $mybb->settings['bbname'], $mybb->settings['bburl'], my_date($mybb->settings['dateformat'], $startdate)/*.', '.my_date($mybb->settings['timeformat'], $startdate)*/, my_date($mybb->settings['dateformat'], $enddate)/*.', '.my_date($mybb->settings['timeformat'], $enddate)*/, $threads_count, $threads_count, $threads_count), array(
 			'allow_html'		=> 1,
 			'allow_smilies'		=> 1,
 			'allow_mycode'		=> 1,
@@ -750,16 +844,6 @@ function ougc_annbars_activate()
 	require_once MYBB_ROOT.'/inc/adminfunctions_templates.php';
 	find_replace_templatesets('header', '#'.preg_quote('<navigation>').'#', '<navigation><!--OUGC_ANNBARS-->');
 
-	// Add our settings
-	/*
-	$PL->settings('ougc_plugins', 'OUGC Plugins', $lang->ougc_plugins, array(
-		'annbars_limit'	=> array(
-		   'title'			=> $lang->ougc_annbars_setting_limit,
-		   'description'	=> $lang->ougc_annbars_setting_limit_desc,
-		   'optionscode'	=> 'text',
-			'value'			=>	5,
-		)
-	));*/
 	$PL->settings('ougc_annbars', $lang->ougc_annbars_plugin, $lang->ougc_annbars_plugin_d, array(
 		'limit'	=> array(
 		   'title'			=> $lang->ougc_annbars_setting_limit,
@@ -769,13 +853,6 @@ function ougc_annbars_activate()
 		)
 	));
 
-	// Insert template/group
-	/*
-	$PL->templates('ougcplugins', 'OUGC Plugins', array(
-		'annbars_bar'	=> '<div class="ougc_annbars_{$bar[\'style\']}">
-	{$bar[\'content\']}
-</div><br/>'
-	));*/
 	$PL->templates('ougcannbars', $lang->ougc_annbars_plugin, array(
 		'bar'		=> '<div class="ougc_annbars_{$bar[\'style\']}" id="ougcannbars_bar_{$key}">
 	<div class="float_right dismiss_notice"><img src="{$theme[\'imgdir\']}/dismiss_notice.png" alt="{$lang->dismiss_notice}" title="{$lang->dismiss_notice}" /></div>
@@ -803,14 +880,9 @@ function ougc_annbars_activate()
 	}
 
 	/*~*~* RUN UPDATES START *~*~*/
+	$annbars->_db_verify_tables();
 	if($plugins['annbars'] <= 1801)
 	{
-		$db->modify_column('ougc_annbars', 'content', 'text NOT NULL');
-		$db->field_exists('visible', 'ougc_annbars') or $db->add_column('ougc_annbars', 'visible', 'tinyint(1) NOT NULL DEFAULT \'1\' AFTER groups');
-		$db->field_exists('forums', 'ougc_annbars') or $db->add_column('ougc_annbars', 'forums', 'varchar(100) NOT NULL DEFAULT \'\' AFTER visible');
-		$db->field_exists('scripts', 'ougc_annbars') or $db->add_column('ougc_annbars', 'scripts', 'text NOT NULL AFTER forums');
-		$db->field_exists('startdate', 'ougc_annbars') or $db->add_column('ougc_annbars', 'startdate', 'int(10) NOT NULL DEFAULT \'0\' AFTER scripts');
-
 		$annbars->update_task();
 	}
 	/*~*~* RUN UPDATES END *~*~*/
@@ -848,24 +920,7 @@ function ougc_annbars_install()
 	global $db, $annbars;
 	$annbars->meets_requirements() or $annbars->admin_redirect($annbars->message, true);
 
-	// Drop our table
-	$db->drop_table('ougc_annbars');
-
-	// Create our tables if none exists
-	$db->write_query("CREATE TABLE `".TABLE_PREFIX."ougc_annbars` (
-			`aid` bigint(30) UNSIGNED NOT NULL AUTO_INCREMENT,
-			`name` varchar(100) NOT NULL DEFAULT '',
-			`content` text NOT NULL,
-			`style` varchar(20) NOT NULL DEFAULT '',
-			`groups` varchar(100) NOT NULL DEFAULT '',
-			`visible` tinyint(1) NOT NULL DEFAULT '1',
-			`forums` varchar(100) NOT NULL DEFAULT '',
-			`scripts` text NOT NULL,
-			`startdate` int(10) NOT NULL DEFAULT '0',
-			`enddate` int(10) NOT NULL DEFAULT '0',
-			PRIMARY KEY (`aid`)
-		) ENGINE=MyISAM{$db->build_create_table_collation()};"
-	);
+	$annbars->_db_verify_tables();
 
 	$annbars->update_task();
 }
@@ -884,8 +939,11 @@ function ougc_annbars_uninstall()
 	global $annbars, $db, $PL, $cache;
 	$annbars->meets_requirements() or $annbars->admin_redirect($annbars->message, true);
 
-	// Drop our table
-	$db->drop_table('ougc_annbars');
+	// Drop DB entries
+	foreach($ougc_pages->_db_tables() as $name => $table)
+	{
+		$db->drop_table($name);
+	}
 
 	// Delete the cache.
 	$PL->cache_delete('ougc_annbars');
@@ -894,31 +952,10 @@ function ougc_annbars_uninstall()
 	$PL->stylesheet_delete('ougc_annbars');
 
 	// Delete settings
-	$PL->settings_delete('ougc_annbars'); // we can't use this :(
-	/*$query = $db->simple_select('settinggroups', 'gid', 'name=\'ougc_plugins\'');
-	while($gid = $db->fetch_field($query, 'gid'))
-	{
-		$gid = (int)$gid;
-		$db->delete_query('settings', 'gid=\''.$gid.'\' AND name=\'ougc_plugins_annbars_limit\'');
-
-		$q = $db->simple_select('settings', 'gid', 'gid=\''.$gid.'\'');
-
-		if($db->num_rows($q) < 1)
-		{
-			$db->delete_query('settinggroups', 'gid=\''.$gid.'\'');
-		}
-		unset($q);
-	}*/
+	$PL->settings_delete('ougc_annbars');
 
 	// Delete template/group
-	$PL->templates_delete('ougcannbars'); // we can't use this :(
-	/*$db->delete_query('templates', 'title=\'ougcplugins_annbars_bar\''); // Delete template
-
-	$query = $db->simple_select('templates', 'tid', 'title=\'ougcplugins\' OR title LIKE \'ougcplugins=_%\' ESCAPE \'=\'');
-	if(!$db->num_rows($query))
-	{
-		$db->delete_query('templategroups', 'prefix=\'ougcplugins\''); // Delete template groups
-	}*/
+	$PL->templates_delete('ougcannbars');
 
 	// Delete version from cache
 	$plugins = (array)$cache->read('ougc_plugins');
@@ -1107,6 +1144,33 @@ function ougc_annbars_show(&$page)
 
 				++$count;
 
+				$threads_count = '';
+				if($bar['frules'])
+				{
+					global $db;
+
+					$fids = implode("','", array_map('intval', explode(',', $bar['frules_fid'])));
+
+					$closed = (int)$bar['frules_closed'] ? (int)$bar['frules_closed'] : '';
+
+					$thread_time_limit = TIME_NOW - 60 * 60 * 24 * 7 * (int)$bar['frules_dateline'];
+
+					$where = array(
+						'fid' => "fid IN ('{$fids}')",
+						'closed' => "closed='{$closed}'",
+						'dateline' => "dateline>'{$thread_time_limit}'",
+					);
+
+					$query = $db->simple_select('threads', 'COUNT(tid) AS total_threads', implode(' AND ', $where), array('limit' => 1));
+
+					$threads_count = (int)$db->fetch_field($query, 'total_threads');
+
+					if(!$threads_count)
+					{
+						continue;
+					}
+				}
+
 				if(!in_array($bar['style'], $annbars->styles))
 				{
 					$bar['style'] = 'custom '.htmlspecialchars_uni($bar['style']);
@@ -1118,7 +1182,7 @@ function ougc_annbars_show(&$page)
 					$bar['content'] = $lang->{$lang_val};
 				}
 
-				$bar['content'] = $annbars->parse_message($bar['content'], $bar['startdate'], $bar['enddate']);
+				$bar['content'] = $annbars->parse_message($bar['content'], $bar['startdate'], $bar['enddate'], $threads_count);
 
 				eval('$ougc_annbars .= "'.$templates->get('ougcannbars_bar').'";');
 			}
