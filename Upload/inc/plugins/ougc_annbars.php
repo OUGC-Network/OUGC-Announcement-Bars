@@ -846,10 +846,16 @@ function ougc_annbars_activate()
 
 	$PL->settings('ougc_annbars', $lang->ougc_annbars_plugin, $lang->ougc_annbars_plugin_d, array(
 		'limit'	=> array(
-		   'title'			=> $lang->ougc_annbars_setting_limit,
-		   'description'	=> $lang->ougc_annbars_setting_limit_desc,
-		   'optionscode'	=> 'text',
+			'title'			=> $lang->ougc_annbars_setting_limit,
+			'description'	=> $lang->ougc_annbars_setting_limit_desc,
+			'optionscode'	=> 'numeric',
 			'value'			=>	5,
+		),
+		'dismisstime'	=> array(
+			'title'			=> $lang->ougc_annbars_setting_dismisstime,
+			'description'	=> $lang->ougc_annbars_setting_dismisstime_desc,
+			'optionscode'	=> 'numeric',
+			'value'			=>	7,
 		)
 	));
 
@@ -859,7 +865,11 @@ function ougc_annbars_activate()
 	{$bar[\'content\']}
 </div><br/>',
 		'wrapper'	=> '{$ougc_annbars}
-<script type="text/javascript" src="{$mybb->settings[\'bburl\']}/jscripts/ougc_annbars.js?ver=1806"></script>'
+<script type="text/javascript">
+	var OUGCAnnoucementBars = {$time};
+	var OUGCAnnoucementBarsCutoff = {$days};
+</script>
+<script type="text/javascript" src="{$mybb->settings[\'bburl\']}/jscripts/ougc_annbars.js?ver=1820"></script>'
 	));
 
 	// Update administrator permissions
@@ -1193,6 +1203,10 @@ function ougc_annbars_show(&$page)
 
 		if($ougc_annbars)
 		{
+			$time = TIME_NOW;
+
+			$days = TIME_NOW - (60 * 60 * 24 * $mybb->settings['ougc_annbars_dismisstime']);
+
 			$ougc_annbars = eval($templates->render('ougcannbars_wrapper'));
 		}
 

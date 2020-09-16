@@ -37,12 +37,10 @@ $l['ougc_annbars_plreq'] = 'This plugin requires <a href="{1}">PluginLibrary</a>
 $l['ougc_annbars_plold'] = 'This plugin requires PluginLibrary version {1} or later, whereas your current version is {2}. Please do update <a href="{3}">PluginLibrary</a>.';
 
 // Settings
-$l['ougc_annbars_setting_power'] = 'Turn On/Off';
-$l['ougc_annbars_setting_power_desc'] = 'Turn this feature on/off without losing any data.';
-#$l['ougc_annbars_setting_limit'] = 'OUGC Announcement Bars';
-#$l['ougc_annbars_setting_limit_desc'] = '<b>Bars Limit:</b> Write the limit number of bars to show at any page. 0 = no limit.';
 $l['ougc_annbars_setting_limit'] = 'Bars Limit';
 $l['ougc_annbars_setting_limit_desc'] = 'Write the maximum number of bars to show at any page. 0 = no limit.';
+$l['ougc_annbars_setting_dismisstime'] = 'Dismiss Time';
+$l['ougc_annbars_setting_dismisstime_desc'] = 'Input the amount of days users can keep annoucements as dismissed..';
 
 // ACP Page
 $l['ougc_annbars_menu'] = 'Manage Bars';

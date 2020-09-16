@@ -28,22 +28,29 @@
 var OUGC_Plugins = OUGC_Plugins || {};
 
 $.extend(true, OUGC_Plugins, {
-	initAlertsSystem: function()
+	initAnnoucementBarsSystem: function()
 	{
 		$('div[id^="ougcannbars_bar_"]').each(function () {
 			var id = $(this).attr('id');
 
-			if(Cookie.get(id)) {
-				$('#' + id).hide();
+			var CookieVal = Cookie.get(id);
+
+			if(CookieVal) {
+				if(CookieVal < OUGCAnnoucementBarsCutoff) {
+					Cookie.unset(id);
+				}
+				else {
+					$('#' + id).hide();
+				}
 			}
 
 			$('#' + id + ' .dismiss_notice').on('click', function() {
 				$('#' + id).fadeOut(250, function () {
-					Cookie.set(id, 7);
+					Cookie.set(id, OUGCAnnoucementBars);
 				});
 			});
 		});
 	},
 });
 
-OUGC_Plugins.initAlertsSystem();
+OUGC_Plugins.initAnnoucementBarsSystem();
