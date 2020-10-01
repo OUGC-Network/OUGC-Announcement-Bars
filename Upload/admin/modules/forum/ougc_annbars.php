@@ -329,6 +329,7 @@ if($mybb->input['action'] == 'add' || $mybb->input['action'] == 'edit')
 	</script>";
 
 	$form_container->output_row($lang->ougc_annbars_form_visible, $lang->ougc_annbars_form_visible_d, $visible_select, '', array(), array('id' => 'row_visible'));
+	$form_container->output_row($lang->ougc_annbars_form_dismissible, $lang->ougc_annbars_form_dismissible_d, $form->generate_yes_no_radio('dismissible', $annbars->bar_data['dismissible']));
 	$form_container->output_row($lang->ougc_annbars_form_startdate." <em>*</em>", $lang->ougc_annbars_form_startdate_d, $form->generate_date_select('startdate', $annbars->bar_data['startdate_day'], $annbars->bar_data['startdate_month'], $annbars->bar_data['startdate_year']));
 	$form_container->output_row($lang->ougc_annbars_form_enddate." <em>*</em>", $lang->ougc_annbars_form_enddate_d, $form->generate_date_select('enddate', $annbars->bar_data['enddate_day'], $annbars->bar_data['enddate_month'], $annbars->bar_data['enddate_year']));
 

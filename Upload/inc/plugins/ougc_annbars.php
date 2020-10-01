@@ -149,6 +149,7 @@ class OUGC_ANNBARS
 				'visible'	=> "tinyint(1) NOT NULL DEFAULT '1'",
 				'forums'	=> "varchar(100) NOT NULL DEFAULT ''",
 				'scripts'	=> "text NOT NULL",
+				'dismissible'	=> "tinyint(10) NOT NULL DEFAULT '1'",
 				'frules'	=> "tinyint(1) NOT NULL DEFAULT '0'",
 				'frules_fid'	=> "varchar(100) NOT NULL DEFAULT ''",
 				'frules_closed'	=> "tinyint(1) NOT NULL DEFAULT '0'",
@@ -423,6 +424,7 @@ class OUGC_ANNBARS
 				'visible'			=> (int)$bar['visible'],
 				'forums'			=> explode(',', $bar['forums']),
 				'scripts'			=> $bar['scripts'],
+				'dismissible'		=> $bar['dismissible'],
 				'frules'			=> (int)$bar['frules'],
 				'frules_fid'		=> explode(',', $bar['frules_fid']),
 				'frules_closed'		=> (int)$bar['frules_closed'],
@@ -448,6 +450,7 @@ class OUGC_ANNBARS
 				'visible'			=> 1,
 				'forums'			=> array(),
 				'scripts'			=> '',
+				'dismissible'		=> 1,
 				'frules'			=> 0,
 				'frules_fid'		=> array(),
 				'frules_closed'		=> 0,
@@ -540,6 +543,7 @@ class OUGC_ANNBARS
 			'visible'			=> (int)$data['visible'],
 			'forums'			=> '',
 			'scripts'			=> $db->escape_string($data['scripts']),
+			'dismissible'		=> (int)$data['dismissible'],
 			'frules'			=> (int)$data['frules'],
 			'frules_fid'		=> '',
 			'frules_closed'		=> (int)$data['frules_closed'],
@@ -1004,13 +1008,17 @@ function ougc_annbars_show(&$page)
 	global $mybb, $theme;
 
 	$limit = (isset($mybb->settings['ougc_annbars_limit']) ? (int)$mybb->settings['ougc_annbars_limit'] : 0);
+
 	if($limit >= 0)
 	{
 		global $PL, $annbars;
+
 		$PL or require_once PLUGINLIBRARY;
+
 		$bars = $PL->cache_read('ougc_annbars');
 
 		$ougc_annbars = '';
+
 		if(is_array($bars))
 		{
 			global $lang, $templates;
@@ -1018,12 +1026,14 @@ function ougc_annbars_show(&$page)
 			$annbars->lang_load();
 
 			$username = $lang->guest;
+
 			if($mybb->user['uid'])
 			{
 				$username = $mybb->user['username'];
 			}
 
 			$fid = false;
+
 			switch(THIS_SCRIPT)
 			{
 				// $fid
@@ -1049,6 +1059,7 @@ function ougc_annbars_show(&$page)
 					!empty($fid) or $fid = $mybb->get_input('fid', 1);
 					break;
 			}
+
 			$fid = (int)$fid;
 
 			if(!empty($_SERVER['PATH_INFO']))
@@ -1069,6 +1080,7 @@ function ougc_annbars_show(&$page)
 			}
 
 			$count = 1;
+
 			foreach($bars as $key => $bar)
 			{
 				if($limit != 0 && $count > $limit)
@@ -1084,6 +1096,7 @@ function ougc_annbars_show(&$page)
 				if(!$bar['visible'])
 				{
 					$valid_forum = false;
+
 					if($bar['forums'] && $fid)
 					{
 						if($bar['forums'] == -1 || my_strpos(','.$bar['forums'].',', ','.$fid.',') !== false)
@@ -1207,6 +1220,7 @@ function ougc_annbars_show(&$page)
 				}
 
 				$lang_val = 'ougc_annbars_bar_'.$key;
+
 				if(!empty($lang->{$lang_val}))
 				{
 					$bar['content'] = $lang->{$lang_val};
@@ -1214,7 +1228,14 @@ function ougc_annbars_show(&$page)
 
 				$bar['content'] = $annbars->parse_message($bar['content'], $bar['startdate'], $bar['enddate'], $threads_count);
 
-				eval('$ougc_annbars .= "'.$templates->get('ougcannbars_bar').'";');
+				$dismiss_button = '';
+
+				if($bar['dismissible'])
+				{
+					$dismiss_button = eval($templates->render('ougcannbars_dismiss'));
+				}
+
+				$ougc_annbars .= eval($templates->render('ougcannbars_bar'));
 			}
 		}
 
