@@ -870,9 +870,10 @@ function ougc_annbars_activate()
 
 	$PL->templates('ougcannbars', $lang->ougc_annbars_plugin, array(
 		'bar'		=> '<div class="ougc_annbars_{$bar[\'style\']}" id="ougcannbars_bar_{$key}">
-	<div class="float_right dismiss_notice"><img src="{$theme[\'imgdir\']}/dismiss_notice.png" alt="{$lang->dismiss_notice}" title="{$lang->dismiss_notice}" /></div>
+	{$dismiss_button}
 	{$bar[\'content\']}
 </div><br/>',
+		'dismiss'		=> '<div class="float_right dismiss_notice"><img src="{$theme[\'imgdir\']}/dismiss_notice.png" alt="{$lang->dismiss_notice}" title="{$lang->dismiss_notice}" /></div>',
 		'wrapper'	=> '{$ougc_annbars}
 <script type="text/javascript">
 	var OUGCAnnoucementBars = {$time};
