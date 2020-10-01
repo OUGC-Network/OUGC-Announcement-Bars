@@ -91,7 +91,7 @@ if($mybb->input['action'] == 'add' || $mybb->input['action'] == 'edit')
 		$page->output_nav_tabs($sub_tabs, 'ougc_annbars_edit');
 	}
 
-	foreach(array('groups', 'visible', 'forums', 'scripts', 'frules', 'frules_fid', 'frules_closed', 'frules_dateline', 'style') as $key)
+	foreach(array('groups', 'visible', 'forums', 'scripts', 'frules', 'frules_fid', 'frules_closed', 'frules_visible', 'frules_dateline', 'style') as $key)
 	{
 		if(!isset($mybb->input[$key]) && isset($bar[$key]))
 		{
@@ -154,6 +154,23 @@ if($mybb->input['action'] == 'add' || $mybb->input['action'] == 'edit')
 		$visible_checked['custom'] = 'checked="checked"';
 	}
 	$annbars->bar_data['visible'] = $mybb->input['visible'];
+
+	$frules_visible_checked = array(1 => '', -1 => '', 0 => '');
+
+	$annbars->bar_data['frules_visible'] = $mybb->get_input('frules_visible', 1);
+
+	if($annbars->bar_data['frules_visible'] == 1)
+	{
+		$frules_visible_checked[1] = 'checked="checked"';
+	}
+	elseif($annbars->bar_data['frules_visible'] == -1)
+	{
+		$frules_visible_checked[-1] = 'checked="checked"';
+	}
+	else
+	{
+		$frules_visible_checked[0] = 'checked="checked"';
+	}
 
 	$forum_checked = array('all' => '', 'custom' => '', 'none' => '');
 	if($mybb->get_input('forums_type') == 'all' || $mybb->get_input('forums', 1) == -1 || ($add && $mybb->request_method != 'post'))
@@ -318,6 +335,15 @@ if($mybb->input['action'] == 'add' || $mybb->input['action'] == 'edit')
 	$form_container->output_row($lang->ougc_annbars_form_frules, $lang->ougc_annbars_form_frules_d, $form->generate_yes_no_radio('frules', $annbars->bar_data['frules']));
 	$form_container->output_row($lang->ougc_annbars_form_frules_fid, $lang->ougc_annbars_form_frules_fid_d, $form->generate_forum_select('frules_fid[]', $annbars->bar_data['frules_fid'], array('multiple' => true)));
 	$form_container->output_row($lang->ougc_annbars_form_frules_closed, $lang->ougc_annbars_form_frules_closed_d, $form->generate_yes_no_radio('frules_closed', $annbars->bar_data['frules_closed']));
+
+	$frules_visible_select = "
+	<dl style=\"margin-top: 0; margin-bottom: 0; width: 100%\">
+		<dt><label style=\"display: block;\"><input type=\"radio\" name=\"frules_visible\" value=\"1\" {$frules_visible_checked[1]} style=\"vertical-align: middle;\" /> <strong>{$lang->ougc_annbars_form_frule_visible}</strong></label></dt>
+		<dt><label style=\"display: block;\"><input type=\"radio\" name=\"frules_visible\" value=\"0\" {$frules_visible_checked[0]} style=\"vertical-align: middle;\" /> <strong>{$lang->ougc_annbars_form_frule_unapproved}</strong></label></dt>
+		<dt><label style=\"display: block;\"><input type=\"radio\" name=\"frules_visible\" value=\"-1\" {$frules_visible_checked[-1]} style=\"vertical-align: middle;\" /> <strong>{$lang->ougc_annbars_form_frule_deleted}</strong></label></dt>
+	</dl>";
+
+	$form_container->output_row($lang->ougc_annbars_form_frules_visible, $lang->ougc_annbars_form_frules_visible_d, $frules_visible_select, '', array(), array('id' => 'frules_visible'));
 	$form_container->output_row($lang->ougc_annbars_form_frules_dateline, $lang->ougc_annbars_form_frules_dateline_d, $form->generate_text_box('frules_dateline', $annbars->bar_data['frules_dateline']));
 
 	$form_container->end();

@@ -152,6 +152,8 @@ class OUGC_ANNBARS
 				'frules'	=> "tinyint(1) NOT NULL DEFAULT '0'",
 				'frules_fid'	=> "varchar(100) NOT NULL DEFAULT ''",
 				'frules_closed'	=> "tinyint(1) NOT NULL DEFAULT '0'",
+				//prefix
+				'frules_visible'	=> "tinyint(1) NOT NULL DEFAULT '1'",
 				'frules_dateline'	=> "int(10) NOT NULL DEFAULT '1'",
 				'startdate'	=> "int(10) NOT NULL DEFAULT '0'",
 				'enddate'	=> "int(10) NOT NULL DEFAULT '0'",
@@ -424,6 +426,7 @@ class OUGC_ANNBARS
 				'frules'			=> (int)$bar['frules'],
 				'frules_fid'		=> explode(',', $bar['frules_fid']),
 				'frules_closed'		=> (int)$bar['frules_closed'],
+				'frules_visible'	=> (int)$bar['frules_visible'],
 				'frules_dateline'	=> (int)$bar['frules_dateline'],
 				'startdate'			=> $bar['startdate'],
 				'startdate_day'		=> date('j', $bar['startdate']),
@@ -448,6 +451,7 @@ class OUGC_ANNBARS
 				'frules'			=> 0,
 				'frules_fid'		=> array(),
 				'frules_closed'		=> 0,
+				'frules_visible'	=> 1,
 				'frules_dateline'	=> 1,
 				'startdate'			=> TIME_NOW,
 				'startdate_day'		=> date('j', TIME_NOW),
@@ -539,6 +543,7 @@ class OUGC_ANNBARS
 			'frules'			=> (int)$data['frules'],
 			'frules_fid'		=> '',
 			'frules_closed'		=> (int)$data['frules_closed'],
+			'frules_visible'	=> (int)$data['frules_visible'],
 			'frules_dateline'	=> (int)$data['frules_dateline'],
 			'startdate'			=> TIME_NOW,
 			'enddate'			=> TIME_NOW
@@ -1155,6 +1160,7 @@ function ougc_annbars_show(&$page)
 				++$count;
 
 				$threads_count = '';
+
 				if($bar['frules'])
 				{
 					global $db;
@@ -1164,15 +1170,26 @@ function ougc_annbars_show(&$page)
 					$thread_time_limit = TIME_NOW - 60 * 60 * 24 * 7 * (int)$bar['frules_dateline'];
 
 					$where = array(
-						'fid' => "fid IN ('{$fids}')",
-						'closed' => "closed NOT LIKE 'moved|%'",
-						'dateline' => "dateline>'{$thread_time_limit}'",
+						"fid IN ('{$fids}')"
 					);
+
+					if($bar['frules_dateline'])
+					{
+						$where[] = "dateline>'{$thread_time_limit}'";
+					}
 
 					if($bar['frules_closed'])
 					{
-						$where['closed'] = "closed='1'";
+						$where[] = "closed='1'";
 					}
+					else
+					{
+						$where[] = "closed NOT LIKE 'moved|%'";
+					}
+
+					$bar['frules_visible'] = (int)$bar['frules_visible'];
+
+					$where[] = "visible='{$bar['frules_visible']}'";
 
 					$query = $db->simple_select('threads', 'COUNT(tid) AS total_threads', implode(' AND ', $where), array('limit' => 1));
 

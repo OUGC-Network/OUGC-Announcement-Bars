@@ -85,8 +85,13 @@ $l['ougc_annbars_form_frules_d'] = 'You can decide to display this bar only if t
 $l['ougc_annbars_form_frules_fid'] = 'Forum';
 $l['ougc_annbars_form_frules_closed'] = 'Closed Threads';
 $l['ougc_annbars_form_frules_closed_d'] = 'If selected only closed threads will account.';
+$l['ougc_annbars_form_frules_visible'] = 'Visible Threads';
+$l['ougc_annbars_form_frules_visible_d'] = 'Select the visible status of threads to take into account.';
 $l['ougc_annbars_form_frules_dateline'] = 'Date Cut';
 $l['ougc_annbars_form_frules_dateline_d'] = 'Threads older than <i>n</i> weeks will not account.';
+$l['ougc_annbars_form_frule_visible'] = 'Visible threads.';
+$l['ougc_annbars_form_frule_unapproved'] = 'Unapproved threads.';
+$l['ougc_annbars_form_frule_deleted'] = 'Deleted threads.';
 
 $l['ougc_annbars_button_submit'] = 'Submit';
 
