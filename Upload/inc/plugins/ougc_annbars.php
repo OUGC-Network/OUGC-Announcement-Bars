@@ -47,6 +47,9 @@ if(defined('IN_ADMINCP'))
 
 	// ACP logs page
 	$plugins->add_hook('admin_tools_get_admin_log_action', 'ougc_annbars_logs');
+
+	// Uninstall check
+	$plugins->add_hook('admin_config_plugins_deactivate', 'ougc_annbars_admin_config_plugins_deactivate');
 }
 else
 {
@@ -78,8 +81,8 @@ function ougc_annbars_info()
 		'website'		=> 'https://ougc.network',
 		'author'		=> 'Omar G.',
 		'authorsite'	=> 'https://ougc.network',
-		'version'		=> '1.8.20',
-		'versioncode'	=> 1820,
+		'version'		=> '1.8.21',
+		'versioncode'	=> 1821,
 		'compatibility'	=> '18*',
 		'codename'		=> 'ougc_annbars',
 		'pl'			=> array(
@@ -961,7 +964,7 @@ function ougc_annbars_uninstall()
 	$annbars->meets_requirements() or $annbars->admin_redirect($annbars->message, true);
 
 	// Drop DB entries
-	foreach($ougc_pages->_db_tables() as $name => $table)
+	foreach($annbars->_db_tables() as $name => $table)
 	{
 		$db->drop_table($name);
 	}
@@ -1268,6 +1271,30 @@ function ougc_annbars_logs(&$log)
 		{
 			$lang->{$log['lang_string']} = $lang->sprintf($lang->{$log['lang_string']}, 1, $bar['aid']);
 		}
+	}
+}
+
+function ougc_annbars_admin_config_plugins_deactivate()
+{
+	global $mybb, $page;
+
+	if(
+		$mybb->get_input('action') != 'deactivate' ||
+		$mybb->get_input('plugin') != 'ougc_annbars' ||
+		!$mybb->get_input('uninstall', \MyBB::INPUT_INT)
+	)
+	{
+		return;
+	}
+
+	if($mybb->request_method != 'post')
+	{
+		$page->output_confirm_action('index.php?module=config-plugins&amp;action=deactivate&amp;uninstall=1&amp;plugin=ougc_annbars');
+	}
+
+	if($mybb->get_input('no'))
+	{
+		admin_redirect('index.php?module=config-plugins');
 	}
 }
 
