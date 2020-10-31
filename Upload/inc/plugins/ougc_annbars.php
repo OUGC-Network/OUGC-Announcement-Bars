@@ -47,6 +47,9 @@ if(defined('IN_ADMINCP'))
 
 	// ACP logs page
 	$plugins->add_hook('admin_tools_get_admin_log_action', 'ougc_annbars_logs');
+
+	// Uninstall check
+	$plugins->add_hook('admin_config_plugins_deactivate', 'ougc_annbars_admin_config_plugins_deactivate');
 }
 else
 {
@@ -78,8 +81,8 @@ function ougc_annbars_info()
 		'website'		=> 'https://ougc.network',
 		'author'		=> 'Omar G.',
 		'authorsite'	=> 'https://ougc.network',
-		'version'		=> '1.8.20',
-		'versioncode'	=> 1820,
+		'version'		=> '1.8.21',
+		'versioncode'	=> 1821,
 		'compatibility'	=> '18*',
 		'codename'		=> 'ougc_annbars',
 		'pl'			=> array(
@@ -149,12 +152,16 @@ class OUGC_ANNBARS
 				'visible'	=> "tinyint(1) NOT NULL DEFAULT '1'",
 				'forums'	=> "varchar(100) NOT NULL DEFAULT ''",
 				'scripts'	=> "text NOT NULL",
+				'dismissible'	=> "tinyint(10) NOT NULL DEFAULT '1'",
 				'frules'	=> "tinyint(1) NOT NULL DEFAULT '0'",
 				'frules_fid'	=> "varchar(100) NOT NULL DEFAULT ''",
 				'frules_closed'	=> "tinyint(1) NOT NULL DEFAULT '0'",
+				//prefix
+				'frules_visible'	=> "tinyint(1) NOT NULL DEFAULT '1'",
 				'frules_dateline'	=> "int(10) NOT NULL DEFAULT '1'",
 				'startdate'	=> "int(10) NOT NULL DEFAULT '0'",
 				'enddate'	=> "int(10) NOT NULL DEFAULT '0'",
+				'disporder'	=> "int(10) NOT NULL DEFAULT '1'",
 				'prymary_key'	=> "aid"
 			)
 		);
@@ -300,7 +307,7 @@ class OUGC_ANNBARS
 			$sqlnotin[] = $aid;
 		}
 
-		$query = $db->simple_select('ougc_annbars', '*', 'enddate>=\''.TIME_NOW.'\' AND aid NOT IN (\''.implode('\',\'', $sqlnotin).'\')');
+		$query = $db->simple_select('ougc_annbars', '*', 'enddate>=\''.TIME_NOW.'\' AND aid NOT IN (\''.implode('\',\'', $sqlnotin).'\')', array('order_by' => 'disporder'));
 
 		$update = array();
 
@@ -421,9 +428,11 @@ class OUGC_ANNBARS
 				'visible'			=> (int)$bar['visible'],
 				'forums'			=> explode(',', $bar['forums']),
 				'scripts'			=> $bar['scripts'],
+				'dismissible'		=> $bar['dismissible'],
 				'frules'			=> (int)$bar['frules'],
 				'frules_fid'		=> explode(',', $bar['frules_fid']),
 				'frules_closed'		=> (int)$bar['frules_closed'],
+				'frules_visible'	=> (int)$bar['frules_visible'],
 				'frules_dateline'	=> (int)$bar['frules_dateline'],
 				'startdate'			=> $bar['startdate'],
 				'startdate_day'		=> date('j', $bar['startdate']),
@@ -445,9 +454,11 @@ class OUGC_ANNBARS
 				'visible'			=> 1,
 				'forums'			=> array(),
 				'scripts'			=> '',
+				'dismissible'		=> 1,
 				'frules'			=> 0,
 				'frules_fid'		=> array(),
 				'frules_closed'		=> 0,
+				'frules_visible'	=> 1,
 				'frules_dateline'	=> 1,
 				'startdate'			=> TIME_NOW,
 				'startdate_day'		=> date('j', TIME_NOW),
@@ -536,9 +547,11 @@ class OUGC_ANNBARS
 			'visible'			=> (int)$data['visible'],
 			'forums'			=> '',
 			'scripts'			=> $db->escape_string($data['scripts']),
+			'dismissible'		=> (int)$data['dismissible'],
 			'frules'			=> (int)$data['frules'],
 			'frules_fid'		=> '',
 			'frules_closed'		=> (int)$data['frules_closed'],
+			'frules_visible'	=> (int)$data['frules_visible'],
 			'frules_dateline'	=> (int)$data['frules_dateline'],
 			'startdate'			=> TIME_NOW,
 			'enddate'			=> TIME_NOW
@@ -861,9 +874,10 @@ function ougc_annbars_activate()
 
 	$PL->templates('ougcannbars', $lang->ougc_annbars_plugin, array(
 		'bar'		=> '<div class="ougc_annbars_{$bar[\'style\']}" id="ougcannbars_bar_{$key}">
-	<div class="float_right dismiss_notice"><img src="{$theme[\'imgdir\']}/dismiss_notice.png" alt="{$lang->dismiss_notice}" title="{$lang->dismiss_notice}" /></div>
+	{$dismiss_button}
 	{$bar[\'content\']}
 </div><br/>',
+		'dismiss'		=> '<div class="float_right dismiss_notice"><img src="{$theme[\'imgdir\']}/dismiss_notice.png" alt="{$lang->dismiss_notice}" title="{$lang->dismiss_notice}" /></div>',
 		'wrapper'	=> '{$ougc_annbars}
 <script type="text/javascript">
 	var OUGCAnnoucementBars = {$time};
@@ -950,7 +964,7 @@ function ougc_annbars_uninstall()
 	$annbars->meets_requirements() or $annbars->admin_redirect($annbars->message, true);
 
 	// Drop DB entries
-	foreach($ougc_pages->_db_tables() as $name => $table)
+	foreach($annbars->_db_tables() as $name => $table)
 	{
 		$db->drop_table($name);
 	}
@@ -999,13 +1013,17 @@ function ougc_annbars_show(&$page)
 	global $mybb, $theme;
 
 	$limit = (isset($mybb->settings['ougc_annbars_limit']) ? (int)$mybb->settings['ougc_annbars_limit'] : 0);
+
 	if($limit >= 0)
 	{
 		global $PL, $annbars;
+
 		$PL or require_once PLUGINLIBRARY;
+
 		$bars = $PL->cache_read('ougc_annbars');
 
 		$ougc_annbars = '';
+
 		if(is_array($bars))
 		{
 			global $lang, $templates;
@@ -1013,12 +1031,14 @@ function ougc_annbars_show(&$page)
 			$annbars->lang_load();
 
 			$username = $lang->guest;
+
 			if($mybb->user['uid'])
 			{
 				$username = $mybb->user['username'];
 			}
 
 			$fid = false;
+
 			switch(THIS_SCRIPT)
 			{
 				// $fid
@@ -1044,6 +1064,7 @@ function ougc_annbars_show(&$page)
 					!empty($fid) or $fid = $mybb->get_input('fid', 1);
 					break;
 			}
+
 			$fid = (int)$fid;
 
 			if(!empty($_SERVER['PATH_INFO']))
@@ -1064,6 +1085,7 @@ function ougc_annbars_show(&$page)
 			}
 
 			$count = 1;
+
 			foreach($bars as $key => $bar)
 			{
 				if($limit != 0 && $count > $limit)
@@ -1079,6 +1101,7 @@ function ougc_annbars_show(&$page)
 				if(!$bar['visible'])
 				{
 					$valid_forum = false;
+
 					if($bar['forums'] && $fid)
 					{
 						if($bar['forums'] == -1 || my_strpos(','.$bar['forums'].',', ','.$fid.',') !== false)
@@ -1155,6 +1178,7 @@ function ougc_annbars_show(&$page)
 				++$count;
 
 				$threads_count = '';
+
 				if($bar['frules'])
 				{
 					global $db;
@@ -1164,15 +1188,26 @@ function ougc_annbars_show(&$page)
 					$thread_time_limit = TIME_NOW - 60 * 60 * 24 * 7 * (int)$bar['frules_dateline'];
 
 					$where = array(
-						'fid' => "fid IN ('{$fids}')",
-						'closed' => "closed NOT LIKE 'moved|%'",
-						'dateline' => "dateline>'{$thread_time_limit}'",
+						"fid IN ('{$fids}')"
 					);
+
+					if($bar['frules_dateline'])
+					{
+						$where[] = "dateline>'{$thread_time_limit}'";
+					}
 
 					if($bar['frules_closed'])
 					{
-						$where['closed'] = "closed='1'";
+						$where[] = "closed='1'";
 					}
+					else
+					{
+						$where[] = "closed NOT LIKE 'moved|%'";
+					}
+
+					$bar['frules_visible'] = (int)$bar['frules_visible'];
+
+					$where[] = "visible='{$bar['frules_visible']}'";
 
 					$query = $db->simple_select('threads', 'COUNT(tid) AS total_threads', implode(' AND ', $where), array('limit' => 1));
 
@@ -1190,6 +1225,7 @@ function ougc_annbars_show(&$page)
 				}
 
 				$lang_val = 'ougc_annbars_bar_'.$key;
+
 				if(!empty($lang->{$lang_val}))
 				{
 					$bar['content'] = $lang->{$lang_val};
@@ -1197,7 +1233,14 @@ function ougc_annbars_show(&$page)
 
 				$bar['content'] = $annbars->parse_message($bar['content'], $bar['startdate'], $bar['enddate'], $threads_count);
 
-				eval('$ougc_annbars .= "'.$templates->get('ougcannbars_bar').'";');
+				$dismiss_button = '';
+
+				if($bar['dismissible'])
+				{
+					$dismiss_button = eval($templates->render('ougcannbars_dismiss'));
+				}
+
+				$ougc_annbars .= eval($templates->render('ougcannbars_bar'));
 			}
 		}
 
@@ -1228,6 +1271,30 @@ function ougc_annbars_logs(&$log)
 		{
 			$lang->{$log['lang_string']} = $lang->sprintf($lang->{$log['lang_string']}, 1, $bar['aid']);
 		}
+	}
+}
+
+function ougc_annbars_admin_config_plugins_deactivate()
+{
+	global $mybb, $page;
+
+	if(
+		$mybb->get_input('action') != 'deactivate' ||
+		$mybb->get_input('plugin') != 'ougc_annbars' ||
+		!$mybb->get_input('uninstall', \MyBB::INPUT_INT)
+	)
+	{
+		return;
+	}
+
+	if($mybb->request_method != 'post')
+	{
+		$page->output_confirm_action('index.php?module=config-plugins&amp;action=deactivate&amp;uninstall=1&amp;plugin=ougc_annbars');
+	}
+
+	if($mybb->get_input('no'))
+	{
+		admin_redirect('index.php?module=config-plugins');
 	}
 }
 

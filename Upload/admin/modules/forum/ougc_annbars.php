@@ -91,7 +91,7 @@ if($mybb->input['action'] == 'add' || $mybb->input['action'] == 'edit')
 		$page->output_nav_tabs($sub_tabs, 'ougc_annbars_edit');
 	}
 
-	foreach(array('groups', 'visible', 'forums', 'scripts', 'frules', 'frules_fid', 'frules_closed', 'frules_dateline', 'style') as $key)
+	foreach(array('groups', 'visible', 'forums', 'scripts', 'frules', 'frules_fid', 'frules_closed', 'frules_visible', 'frules_dateline', 'style') as $key)
 	{
 		if(!isset($mybb->input[$key]) && isset($bar[$key]))
 		{
@@ -154,6 +154,23 @@ if($mybb->input['action'] == 'add' || $mybb->input['action'] == 'edit')
 		$visible_checked['custom'] = 'checked="checked"';
 	}
 	$annbars->bar_data['visible'] = $mybb->input['visible'];
+
+	$frules_visible_checked = array(1 => '', -1 => '', 0 => '');
+
+	$annbars->bar_data['frules_visible'] = $mybb->get_input('frules_visible', 1);
+
+	if($annbars->bar_data['frules_visible'] == 1)
+	{
+		$frules_visible_checked[1] = 'checked="checked"';
+	}
+	elseif($annbars->bar_data['frules_visible'] == -1)
+	{
+		$frules_visible_checked[-1] = 'checked="checked"';
+	}
+	else
+	{
+		$frules_visible_checked[0] = 'checked="checked"';
+	}
 
 	$forum_checked = array('all' => '', 'custom' => '', 'none' => '');
 	if($mybb->get_input('forums_type') == 'all' || $mybb->get_input('forums', 1) == -1 || ($add && $mybb->request_method != 'post'))
@@ -312,12 +329,22 @@ if($mybb->input['action'] == 'add' || $mybb->input['action'] == 'edit')
 	</script>";
 
 	$form_container->output_row($lang->ougc_annbars_form_visible, $lang->ougc_annbars_form_visible_d, $visible_select, '', array(), array('id' => 'row_visible'));
+	$form_container->output_row($lang->ougc_annbars_form_dismissible, $lang->ougc_annbars_form_dismissible_d, $form->generate_yes_no_radio('dismissible', $annbars->bar_data['dismissible']));
 	$form_container->output_row($lang->ougc_annbars_form_startdate." <em>*</em>", $lang->ougc_annbars_form_startdate_d, $form->generate_date_select('startdate', $annbars->bar_data['startdate_day'], $annbars->bar_data['startdate_month'], $annbars->bar_data['startdate_year']));
 	$form_container->output_row($lang->ougc_annbars_form_enddate." <em>*</em>", $lang->ougc_annbars_form_enddate_d, $form->generate_date_select('enddate', $annbars->bar_data['enddate_day'], $annbars->bar_data['enddate_month'], $annbars->bar_data['enddate_year']));
 
 	$form_container->output_row($lang->ougc_annbars_form_frules, $lang->ougc_annbars_form_frules_d, $form->generate_yes_no_radio('frules', $annbars->bar_data['frules']));
 	$form_container->output_row($lang->ougc_annbars_form_frules_fid, $lang->ougc_annbars_form_frules_fid_d, $form->generate_forum_select('frules_fid[]', $annbars->bar_data['frules_fid'], array('multiple' => true)));
 	$form_container->output_row($lang->ougc_annbars_form_frules_closed, $lang->ougc_annbars_form_frules_closed_d, $form->generate_yes_no_radio('frules_closed', $annbars->bar_data['frules_closed']));
+
+	$frules_visible_select = "
+	<dl style=\"margin-top: 0; margin-bottom: 0; width: 100%\">
+		<dt><label style=\"display: block;\"><input type=\"radio\" name=\"frules_visible\" value=\"1\" {$frules_visible_checked[1]} style=\"vertical-align: middle;\" /> <strong>{$lang->ougc_annbars_form_frule_visible}</strong></label></dt>
+		<dt><label style=\"display: block;\"><input type=\"radio\" name=\"frules_visible\" value=\"0\" {$frules_visible_checked[0]} style=\"vertical-align: middle;\" /> <strong>{$lang->ougc_annbars_form_frule_unapproved}</strong></label></dt>
+		<dt><label style=\"display: block;\"><input type=\"radio\" name=\"frules_visible\" value=\"-1\" {$frules_visible_checked[-1]} style=\"vertical-align: middle;\" /> <strong>{$lang->ougc_annbars_form_frule_deleted}</strong></label></dt>
+	</dl>";
+
+	$form_container->output_row($lang->ougc_annbars_form_frules_visible, $lang->ougc_annbars_form_frules_visible_d, $frules_visible_select, '', array(), array('id' => 'frules_visible'));
 	$form_container->output_row($lang->ougc_annbars_form_frules_dateline, $lang->ougc_annbars_form_frules_dateline_d, $form->generate_text_box('frules_dateline', $annbars->bar_data['frules_dateline']));
 
 	$form_container->end();
@@ -375,14 +402,54 @@ elseif($mybb->input['action'] == 'preview')
 }
 else
 {
+	if($mybb->request_method == 'post')
+	{
+		foreach($mybb->get_input('disporder', MyBB::INPUT_ARRAY) as $aid => $disporder)
+		{
+			$aid = (int)$aid;
+
+			$db->update_query('ougc_annbars', ['disporder' => (int)$disporder], "aid='{$aid}'");
+		}
+
+		$annbars->update_cache();
+
+		$annbars->admin_redirect($lang->ougc_annbars_success_disporder);
+	}
+
 	$page->output_header($lang->ougc_annbars_menu);
 	$page->output_nav_tabs($sub_tabs, 'ougc_annbars_view');
 
-	$table = new Table;
-	$table->construct_header($lang->ougc_annbars_form_name, array('width' => '20%'));
-	$table->construct_header($lang->ougc_annbars_form_content, array('width' => '60%'));
-	$table->construct_header($lang->ougc_annbars_form_status, array('width' => '10%', 'class' => 'align_center'));
-	$table->construct_header($lang->options, array('width' => '10%', 'class' => 'align_center'));
+	$limitstring = '';
+
+	$limitstring = "<div style=\"float: right;\">{$lang->ougc_annbars_form_perpage}: ";
+
+	for($p = 10; $p < 51; $p = $p+10)
+	{
+		$s = ' - ';
+
+		if($p == 50)
+		{
+			$s = '';
+		}
+
+		$limitstring .= '<a href="'.$annbars->build_url(['perpage' => $p]).'">'.$p.'</a>'.$s;
+	}
+
+	$limitstring .= '</div>';
+
+	$form = new Form($annbars->build_url(), 'post');
+
+	$form_container = new FormContainer($lang->ougc_annbars_tab_view_table.$limitstring);
+
+	$form_container->output_row_header($lang->ougc_annbars_form_name, array('width' => '20%'));
+
+	$form_container->output_row_header($lang->ougc_annbars_form_content);
+
+	$form_container->output_row_header($lang->ougc_annbars_form_status, array('width' => '10%', 'class' => 'align_center'));
+
+	$form_container->output_row_header($lang->ougc_annbars_form_order, array('width' => '10%', 'class' => 'align_center'));
+
+	$form_container->output_row_header($lang->options, array('width' => '10%', 'class' => 'align_center'));
 
 	// Multi-page support
 	$perpage = (int)(isset($mybb->input['perpage']) ? (int)$mybb->input['perpage'] : 10);
@@ -408,11 +475,10 @@ else
 	$query = $db->simple_select('ougc_annbars', 'COUNT(aid) AS bars');
 	$barscount = (int)$db->fetch_field($query, 'bars');
 
-	$limitstring = '';
 	if($barscount < 1)
 	{
-		$table->construct_cell('<div align="center">'.$lang->ougc_annbars_view_empty.'</div>', array('colspan' => 6));
-		$table->construct_row();
+		$form_container->output_cell('<div align="center">'.$lang->ougc_annbars_view_empty.'</div>', array('colspan' => 4));
+		$form_container->construct_row();
 	}
 	else
 	{
@@ -420,7 +486,7 @@ else
 		$annbars->update_cache();
 		include_once MYBB_ROOT.'inc/tasks/ougc_annbars.php';
 
-		$query = $db->simple_select('ougc_annbars', '*', '', array('limit' => $perpage, 'limit_start' => $start, 'order_by' => 'aid'));
+		$query = $db->simple_select('ougc_annbars', '*', '', array('limit' => $perpage, 'limit_start' => $start, 'order_by' => 'disporder'));
 
 		while($bar = $db->fetch_array($query))
 		{
@@ -436,50 +502,40 @@ else
 				$bar['name'] = '<i>'.$bar['name'].'</i>';
 			}
 
-			$table->construct_cell('<a href="'.$editurl.'">'.$bar['name'].'</a>');
-			$table->construct_cell(ougc_getpreview($bar['content'], 350, true, true, array('allow_html' => 1)));
+			$form_container->output_cell('<a href="'.$editurl.'">'.$bar['name'].'</a>');
+			$form_container->output_cell(ougc_getpreview($bar['content'], 350, true, true, array('allow_html' => 1)));
 
-			$table->construct_cell('<img src="../'.$config['admin_dir'].'/styles/default/images/icons/bullet_'.$bar['visible'].($mybb->version_code >= 1800 ? '.png' : '.gif').'" alt="'.$lang->{$bar['lang']}.'" title="'.$lang->{$bar['lang']}.'" />', array('class' => 'align_center'));
+			$form_container->output_cell('<img src="../'.$config['admin_dir'].'/styles/default/images/icons/bullet_'.$bar['visible'].($mybb->version_code >= 1800 ? '.png' : '.gif').'" alt="'.$lang->{$bar['lang']}.'" title="'.$lang->{$bar['lang']}.'" />', array('class' => 'align_center'));
+
+			$bar['disporder'] = (int)$bar['disporder'];
+
+			$form_container->output_cell($form->generate_numeric_field("disporder[{$bar['aid']}]", $bar['disporder'], array('min' => 0, 'class' => 'align_center', 'style' => 'width:80%;')), array("class" => "align_center"));
 
 			$popup = new PopupMenu('bar_'.$bar['aid'], $lang->options);
 			$popup->add_item($lang->ougc_annbars_tab_edit, $editurl);
 			$popup->add_item($lang->ougc_annbars_tab_preview, $annbars->build_url(array('action' => 'preview', 'aid' => $bar['aid'])));
 			$popup->add_item($lang->delete, $annbars->build_url(array('action' => 'delete', 'aid' => $bar['aid'])));
-			$table->construct_cell($popup->fetch(), array('class' => 'align_center'));
+			$form_container->output_cell($popup->fetch(), array('class' => 'align_center'));
 
-			$table->construct_row();
+			$form_container->construct_row();
 		}
-
-		// Set url to use
-		$annbars->set_url('index.php');
-
-		// Multipage
-		if($multipage = trim(draw_admin_pagination($mybb->input['page'], $perpage, $barscount, $annbars->build_url(false, 'page'))))
-		{
-			echo $multipage;
-		}
-		$limitstring = '<div style="float: right;">Perpage: ';
-		for($p = 10; $p < 51; $p = $p+10)
-		{
-			$s = ' - ';
-			if($p == 50)
-			{
-				$s = '';
-			}
-
-			if($mybb->input['page'] == $p/10)
-			{
-				$limitstring .= $p.$s;
-			}
-			else
-			{
-				$limitstring .= '<a href="'.$annbars->build_url(false, array('perpage', 'page')).'&perpage='.$p.'">'.$p.'</a>'.$s;
-			}
-		}
-		$limitstring .= '</div>';
 	}
 
-	$table->output($lang->ougc_annbars_tab_view_d.$limitstring);
+	$form_container->end();
+
+	$form->output_submit_wrapper([
+		$form->generate_submit_button($lang->ougc_annbars_form_submit),
+		$form->generate_reset_button($lang->reset)
+	]);
+
+	$form->end();
+
+	// Multipage
+	if($multipage = trim(draw_admin_pagination($mybb->input['page'], $perpage, $barscount, $annbars->build_url(false, 'page'))))
+	{
+		echo $multipage;
+	}
+
 	$page->output_footer();
 }
 exit;

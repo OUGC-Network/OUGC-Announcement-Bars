@@ -47,6 +47,7 @@ $l['ougc_annbars_menu'] = 'Manage Bars';
 $l['ougc_annbars_permissions'] = 'Can manage announcement bars?';
 $l['ougc_annbars_tab_view'] = 'View';
 $l['ougc_annbars_tab_view_d'] = 'Manage any existing announcement bar.';
+$l['ougc_annbars_tab_view_table'] = 'Manage Existing Bars';
 $l['ougc_annbars_tab_add'] = 'Add';
 $l['ougc_annbars_tab_add_d'] = 'Add a new announcement bar.';
 $l['ougc_annbars_tab_edit'] = 'Edit';
@@ -54,6 +55,9 @@ $l['ougc_annbars_tab_preview'] = 'Preview';
 $l['ougc_annbars_tab_edit_d'] = 'Edit any existing announcement bar.';
 $l['ougc_annbars_form_content'] = 'Content';
 $l['ougc_annbars_form_status'] = 'Status';
+$l['ougc_annbars_form_order'] = 'Display Order';
+$l['ougc_annbars_form_perpage'] = 'Per page';
+$l['ougc_annbars_form_submit'] = 'Update Order';
 
 // Form lang
 $l['ougc_annbars_form_name'] = 'Name';
@@ -76,6 +80,8 @@ $l['ougc_annbars_form_groups'] = 'Groups';
 $l['ougc_annbars_form_groups_d'] = 'Choose the groups to show this bar to.';
 $l['ougc_annbars_form_forums'] = 'Forums';
 $l['ougc_annbars_form_scripts'] = 'Scripts';
+$l['ougc_annbars_form_dismissible'] = 'Can be dismissed';
+$l['ougc_annbars_form_dismissible_d'] = 'Enable this for users to be able to dimiss this announcement bar.';
 $l['ougc_annbars_form_startdate'] = 'Start Date';
 $l['ougc_annbars_form_startdate_d'] = 'Choose the date this bar will being visible.';
 $l['ougc_annbars_form_enddate'] = 'End Date';
@@ -85,8 +91,13 @@ $l['ougc_annbars_form_frules_d'] = 'You can decide to display this bar only if t
 $l['ougc_annbars_form_frules_fid'] = 'Forum';
 $l['ougc_annbars_form_frules_closed'] = 'Closed Threads';
 $l['ougc_annbars_form_frules_closed_d'] = 'If selected only closed threads will account.';
+$l['ougc_annbars_form_frules_visible'] = 'Visible Threads';
+$l['ougc_annbars_form_frules_visible_d'] = 'Select the visible status of threads to take into account.';
 $l['ougc_annbars_form_frules_dateline'] = 'Date Cut';
 $l['ougc_annbars_form_frules_dateline_d'] = 'Threads older than <i>n</i> weeks will not account.';
+$l['ougc_annbars_form_frule_visible'] = 'Visible threads.';
+$l['ougc_annbars_form_frule_unapproved'] = 'Unapproved threads.';
+$l['ougc_annbars_form_frule_deleted'] = 'Deleted threads.';
 
 $l['ougc_annbars_button_submit'] = 'Submit';
 
@@ -101,6 +112,7 @@ $l['ougc_annbars_error_invalidenddate'] = 'Invalid end date.';
 $l['ougc_annbars_success_add'] = 'Announcement bar was created successfully.';
 $l['ougc_annbars_success_edit'] = 'Announcement bar was edited successfully.';
 $l['ougc_annbars_success_delete'] = 'Announcement bar deleted successfully.';
+$l['ougc_annbars_success_disporder'] = 'Announcement bar display order updated successfully.';
 $l['ougc_annbars_success_cache'] = 'The cache was rebuild successfully.';
 
 // View all
