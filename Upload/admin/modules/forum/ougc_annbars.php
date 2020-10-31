@@ -402,14 +402,54 @@ elseif($mybb->input['action'] == 'preview')
 }
 else
 {
+	if($mybb->request_method == 'post')
+	{
+		foreach($mybb->get_input('disporder', MyBB::INPUT_ARRAY) as $aid => $disporder)
+		{
+			$aid = (int)$aid;
+
+			$db->update_query('ougc_annbars', ['disporder' => (int)$disporder], "aid='{$aid}'");
+		}
+
+		$annbars->update_cache();
+
+		$annbars->admin_redirect($lang->ougc_annbars_success_disporder);
+	}
+
 	$page->output_header($lang->ougc_annbars_menu);
 	$page->output_nav_tabs($sub_tabs, 'ougc_annbars_view');
 
-	$table = new Table;
-	$table->construct_header($lang->ougc_annbars_form_name, array('width' => '20%'));
-	$table->construct_header($lang->ougc_annbars_form_content, array('width' => '60%'));
-	$table->construct_header($lang->ougc_annbars_form_status, array('width' => '10%', 'class' => 'align_center'));
-	$table->construct_header($lang->options, array('width' => '10%', 'class' => 'align_center'));
+	$limitstring = '';
+
+	$limitstring = "<div style=\"float: right;\">{$lang->ougc_annbars_form_perpage}: ";
+
+	for($p = 10; $p < 51; $p = $p+10)
+	{
+		$s = ' - ';
+
+		if($p == 50)
+		{
+			$s = '';
+		}
+
+		$limitstring .= '<a href="'.$annbars->build_url(['perpage' => $p]).'">'.$p.'</a>'.$s;
+	}
+
+	$limitstring .= '</div>';
+
+	$form = new Form($annbars->build_url(), 'post');
+
+	$form_container = new FormContainer($lang->ougc_annbars_tab_view_table.$limitstring);
+
+	$form_container->output_row_header($lang->ougc_annbars_form_name, array('width' => '20%'));
+
+	$form_container->output_row_header($lang->ougc_annbars_form_content);
+
+	$form_container->output_row_header($lang->ougc_annbars_form_status, array('width' => '10%', 'class' => 'align_center'));
+
+	$form_container->output_row_header($lang->ougc_annbars_form_order, array('width' => '10%', 'class' => 'align_center'));
+
+	$form_container->output_row_header($lang->options, array('width' => '10%', 'class' => 'align_center'));
 
 	// Multi-page support
 	$perpage = (int)(isset($mybb->input['perpage']) ? (int)$mybb->input['perpage'] : 10);
@@ -435,11 +475,10 @@ else
 	$query = $db->simple_select('ougc_annbars', 'COUNT(aid) AS bars');
 	$barscount = (int)$db->fetch_field($query, 'bars');
 
-	$limitstring = '';
 	if($barscount < 1)
 	{
-		$table->construct_cell('<div align="center">'.$lang->ougc_annbars_view_empty.'</div>', array('colspan' => 6));
-		$table->construct_row();
+		$form_container->output_cell('<div align="center">'.$lang->ougc_annbars_view_empty.'</div>', array('colspan' => 4));
+		$form_container->construct_row();
 	}
 	else
 	{
@@ -447,7 +486,7 @@ else
 		$annbars->update_cache();
 		include_once MYBB_ROOT.'inc/tasks/ougc_annbars.php';
 
-		$query = $db->simple_select('ougc_annbars', '*', '', array('limit' => $perpage, 'limit_start' => $start, 'order_by' => 'aid'));
+		$query = $db->simple_select('ougc_annbars', '*', '', array('limit' => $perpage, 'limit_start' => $start, 'order_by' => 'disporder'));
 
 		while($bar = $db->fetch_array($query))
 		{
@@ -463,50 +502,40 @@ else
 				$bar['name'] = '<i>'.$bar['name'].'</i>';
 			}
 
-			$table->construct_cell('<a href="'.$editurl.'">'.$bar['name'].'</a>');
-			$table->construct_cell(ougc_getpreview($bar['content'], 350, true, true, array('allow_html' => 1)));
+			$form_container->output_cell('<a href="'.$editurl.'">'.$bar['name'].'</a>');
+			$form_container->output_cell(ougc_getpreview($bar['content'], 350, true, true, array('allow_html' => 1)));
 
-			$table->construct_cell('<img src="../'.$config['admin_dir'].'/styles/default/images/icons/bullet_'.$bar['visible'].($mybb->version_code >= 1800 ? '.png' : '.gif').'" alt="'.$lang->{$bar['lang']}.'" title="'.$lang->{$bar['lang']}.'" />', array('class' => 'align_center'));
+			$form_container->output_cell('<img src="../'.$config['admin_dir'].'/styles/default/images/icons/bullet_'.$bar['visible'].($mybb->version_code >= 1800 ? '.png' : '.gif').'" alt="'.$lang->{$bar['lang']}.'" title="'.$lang->{$bar['lang']}.'" />', array('class' => 'align_center'));
+
+			$bar['disporder'] = (int)$bar['disporder'];
+
+			$form_container->output_cell($form->generate_numeric_field("disporder[{$bar['aid']}]", $bar['disporder'], array('min' => 0, 'class' => 'align_center', 'style' => 'width:80%;')), array("class" => "align_center"));
 
 			$popup = new PopupMenu('bar_'.$bar['aid'], $lang->options);
 			$popup->add_item($lang->ougc_annbars_tab_edit, $editurl);
 			$popup->add_item($lang->ougc_annbars_tab_preview, $annbars->build_url(array('action' => 'preview', 'aid' => $bar['aid'])));
 			$popup->add_item($lang->delete, $annbars->build_url(array('action' => 'delete', 'aid' => $bar['aid'])));
-			$table->construct_cell($popup->fetch(), array('class' => 'align_center'));
+			$form_container->output_cell($popup->fetch(), array('class' => 'align_center'));
 
-			$table->construct_row();
+			$form_container->construct_row();
 		}
-
-		// Set url to use
-		$annbars->set_url('index.php');
-
-		// Multipage
-		if($multipage = trim(draw_admin_pagination($mybb->input['page'], $perpage, $barscount, $annbars->build_url(false, 'page'))))
-		{
-			echo $multipage;
-		}
-		$limitstring = '<div style="float: right;">Perpage: ';
-		for($p = 10; $p < 51; $p = $p+10)
-		{
-			$s = ' - ';
-			if($p == 50)
-			{
-				$s = '';
-			}
-
-			if($mybb->input['page'] == $p/10)
-			{
-				$limitstring .= $p.$s;
-			}
-			else
-			{
-				$limitstring .= '<a href="'.$annbars->build_url(false, array('perpage', 'page')).'&perpage='.$p.'">'.$p.'</a>'.$s;
-			}
-		}
-		$limitstring .= '</div>';
 	}
 
-	$table->output($lang->ougc_annbars_tab_view_d.$limitstring);
+	$form_container->end();
+
+	$form->output_submit_wrapper([
+		$form->generate_submit_button($lang->ougc_annbars_form_submit),
+		$form->generate_reset_button($lang->reset)
+	]);
+
+	$form->end();
+
+	// Multipage
+	if($multipage = trim(draw_admin_pagination($mybb->input['page'], $perpage, $barscount, $annbars->build_url(false, 'page'))))
+	{
+		echo $multipage;
+	}
+
 	$page->output_footer();
 }
 exit;

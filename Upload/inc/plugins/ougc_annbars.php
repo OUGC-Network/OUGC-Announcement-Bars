@@ -158,6 +158,7 @@ class OUGC_ANNBARS
 				'frules_dateline'	=> "int(10) NOT NULL DEFAULT '1'",
 				'startdate'	=> "int(10) NOT NULL DEFAULT '0'",
 				'enddate'	=> "int(10) NOT NULL DEFAULT '0'",
+				'disporder'	=> "int(10) NOT NULL DEFAULT '1'",
 				'prymary_key'	=> "aid"
 			)
 		);
@@ -303,7 +304,7 @@ class OUGC_ANNBARS
 			$sqlnotin[] = $aid;
 		}
 
-		$query = $db->simple_select('ougc_annbars', '*', 'enddate>=\''.TIME_NOW.'\' AND aid NOT IN (\''.implode('\',\'', $sqlnotin).'\')');
+		$query = $db->simple_select('ougc_annbars', '*', 'enddate>=\''.TIME_NOW.'\' AND aid NOT IN (\''.implode('\',\'', $sqlnotin).'\')', array('order_by' => 'disporder'));
 
 		$update = array();
 

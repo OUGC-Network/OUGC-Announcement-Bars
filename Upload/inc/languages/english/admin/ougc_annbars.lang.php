@@ -47,6 +47,7 @@ $l['ougc_annbars_menu'] = 'Manage Bars';
 $l['ougc_annbars_permissions'] = 'Can manage announcement bars?';
 $l['ougc_annbars_tab_view'] = 'View';
 $l['ougc_annbars_tab_view_d'] = 'Manage any existing announcement bar.';
+$l['ougc_annbars_tab_view_table'] = 'Manage Existing Bars';
 $l['ougc_annbars_tab_add'] = 'Add';
 $l['ougc_annbars_tab_add_d'] = 'Add a new announcement bar.';
 $l['ougc_annbars_tab_edit'] = 'Edit';
@@ -54,6 +55,9 @@ $l['ougc_annbars_tab_preview'] = 'Preview';
 $l['ougc_annbars_tab_edit_d'] = 'Edit any existing announcement bar.';
 $l['ougc_annbars_form_content'] = 'Content';
 $l['ougc_annbars_form_status'] = 'Status';
+$l['ougc_annbars_form_order'] = 'Display Order';
+$l['ougc_annbars_form_perpage'] = 'Per page';
+$l['ougc_annbars_form_submit'] = 'Update Order';
 
 // Form lang
 $l['ougc_annbars_form_name'] = 'Name';
@@ -108,6 +112,7 @@ $l['ougc_annbars_error_invalidenddate'] = 'Invalid end date.';
 $l['ougc_annbars_success_add'] = 'Announcement bar was created successfully.';
 $l['ougc_annbars_success_edit'] = 'Announcement bar was edited successfully.';
 $l['ougc_annbars_success_delete'] = 'Announcement bar deleted successfully.';
+$l['ougc_annbars_success_disporder'] = 'Announcement bar display order updated successfully.';
 $l['ougc_annbars_success_cache'] = 'The cache was rebuild successfully.';
 
 // View all
