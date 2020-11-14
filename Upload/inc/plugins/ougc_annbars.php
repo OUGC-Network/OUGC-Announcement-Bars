@@ -1172,7 +1172,7 @@ function ougc_annbars_show(&$page)
 
 				if($fid && $bar['forums'] != -1 && ($bar['forums'] == '' || my_strpos(','.$bar['forums'].',', ','.$fid.',') === false))
 				{
-					#continue;
+					continue;
 				}
 
 				++$count;
