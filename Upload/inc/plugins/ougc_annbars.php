@@ -491,48 +491,68 @@ class OUGC_ANNBARS
 		global $lang;
 
 		$this->validate_errors = array();
-		$valid = true;
 
 		$name = trim($this->bar_data['name']);
+
 		if(!$name || my_strlen($name) > 100)
 		{
 			$this->validate_errors[] = $lang->ougc_annbars_error_invalidname;
-			$valid = false;
 		}
 
 		$content = trim($this->bar_data['content']);
+
 		if(!$content)
 		{
 			$this->validate_errors[] = $lang->ougc_annbars_error_invalidcontent;
-			$valid = false;
 		}
 
 		if(!in_array($this->bar_data['style'], $this->styles) && !trim($this->bar_data['style']))
 		{
 			$this->validate_errors[] = $lang->ougc_annbars_error_invalidstyle;
-			$valid = false;
 		}
 
 		foreach(array('start', 'end') as $key)
 		{
 			$k = $key.'date_';
-			if($this->bar_data[$k.'day'] < 1 || $this->bar_data[$k.'day'] > 31 || $this->bar_data[$k.'month'] < 1 || $this->bar_data[$k.'month'] > 12 || $this->bar_data[$k.'year'] < 2000 || $this->bar_data[$k.'year'] > 2100 || ($this->bar_data[$k.'month'] == 2 && $this->bar_data[$k.'day'] > 29))
+
+			$lang_var = 'ougc_annbars_error_invalid'.$key.'date';
+
+			if(
+				$this->bar_data[$k.'day'] < 1 ||
+				$this->bar_data[$k.'day'] > 31 ||
+				$this->bar_data[$k.'month'] < 1 ||
+				$this->bar_data[$k.'month'] > 12 ||
+				$this->bar_data[$k.'year'] < 2000 ||
+				$this->bar_data[$k.'year'] > 2100
+			)
 			{
-				$lang_var = 'ougc_annbars_error_invalid'.$key.'date';
 				$this->validate_errors[] = $lang->{$lang_var};
-				$valid = false;
+
 				break;
 			}
-			${$k} = $this->_mktime($this->bar_data[$k.'day'], $this->bar_data[$k.'month'], $this->bar_data[$k.'year']);
+			else
+			{
+				$maxDays = cal_days_in_month(CAL_GREGORIAN, $this->bar_data[$k.'month'], $this->bar_data[$k.'year']);
+	
+				if(
+					$this->bar_data[$k.'day'] > $maxDays
+				)
+				{
+					$this->validate_errors[] = $lang->{$lang_var};
+	
+					break;
+				}
+			}
+
+			${$k} = $this->_mktime($this->bar_data[$k.'month'], $this->bar_data[$k.'day'], $this->bar_data[$k.'year']);
 		}
 
-		if($valid && $startdate_ > $enddate_)
+		if($startdate_ > $enddate_)
 		{
 			$this->validate_errors[] = $lang->ougc_annbars_error_invalidstartdate;
-			$valid = false;
 		}
 
-		return $valid;
+		return empty($this->validate_errors);
 	}
 
 	function insert_bar($data=array(), $update=false, $aid=0)
@@ -679,8 +699,7 @@ class OUGC_ANNBARS
 
 	function _mktime($month, $day, $year)
 	{
-		return (int)mktime(0, 0, 0, (int)$month, (int)$day, (int)$year);
-		//return (int)mktime(date('H', TIME_NOW), date('i', TIME_NOW), date('s', TIME_NOW), $month, $day, $year);
+		return (int)gmmktime(0, 0, 0, (int)$month, (int)$day, (int)$year);
 	}
 
 	function update_task($action=2)
