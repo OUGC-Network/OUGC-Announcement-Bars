@@ -33,17 +33,19 @@ defined('IN_MYBB') or die('Direct initialization of this file is not allowed.');
 // PLUGINLIBRARY
 defined('PLUGINLIBRARY') or define('PLUGINLIBRARY', MYBB_ROOT.'inc/plugins/pluginlibrary.php');
 
+global $plugins;
+
 // Add our hook
 if(defined('IN_ADMINCP'))
 {
 	// Add our menu at config panel
-	$plugins->add_hook('admin_forum_menu', create_function('&$args', 'global $lang, $annbars;	$annbars->lang_load();	$args[] = array(\'id\' => \'ougc_annbars\', \'title\' => $lang->ougc_annbars_menu, \'link\' => \'index.php?module=forum-ougc_annbars\');'));
+	$plugins->add_hook('admin_forum_menu', 'ougc_annbars_admin_forum_menu');
 
 	// Add our action handler to config module
-	$plugins->add_hook('admin_forum_action_handler', create_function('&$args', '$args[\'ougc_annbars\'] = array(\'active\' => \'ougc_annbars\', \'file\' => \'ougc_annbars.php\');'));
+	$plugins->add_hook('admin_forum_action_handler', 'ougc_annbars_admin_forum_action_handler');
 
 	// Insert our plugin into the admin permissions page
-	$plugins->add_hook('admin_forum_permissions', create_function('&$args', 'global $lang, $annbars;	$annbars->lang_load();	$args[\'ougc_annbars\'] = $lang->ougc_annbars_permissions;'));
+	$plugins->add_hook('admin_forum_permissions', 'ougc_annbars_admin_forum_permissions');
 
 	// ACP logs page
 	$plugins->add_hook('admin_tools_get_admin_log_action', 'ougc_annbars_logs');
@@ -892,10 +894,10 @@ function ougc_annbars_activate()
 	));
 
 	$PL->templates('ougcannbars', $lang->ougc_annbars_plugin, array(
-		'bar'		=> '<div class="ougc_annbars_{$bar[\'style\']}" id="ougcannbars_bar_{$key}">
+		'bar'		=> '<br/><div class="ougc_annbars_{$bar[\'style\']}" id="ougcannbars_bar_{$key}">
 	{$dismiss_button}
 	{$bar[\'content\']}
-</div><br/>',
+</div>',
 		'dismiss'		=> '<div class="float_right dismiss_notice"><img src="{$theme[\'imgdir\']}/dismiss_notice.png" alt="{$lang->dismiss_notice}" title="{$lang->dismiss_notice}" /></div>',
 		'wrapper'	=> '{$ougc_annbars}
 <script type="text/javascript">
@@ -1291,6 +1293,36 @@ function ougc_annbars_logs(&$log)
 			$lang->{$log['lang_string']} = $lang->sprintf($lang->{$log['lang_string']}, 1, $bar['aid']);
 		}
 	}
+}
+
+function ougc_annbars_admin_forum_menu(&$pluginArguments)
+{
+    global $lang, $annbars;
+
+    $annbars->lang_load();
+
+    $pluginArguments[] = [
+        'id' => 'ougc_annbars',
+        'title' => $lang->ougc_annbars_menu,
+        'link' => 'index.php?module=forum-ougc_annbars'
+    ];
+}
+
+function ougc_annbars_admin_forum_action_handler(&$pluginArguments)
+{
+    $pluginArguments['ougc_annbars'] = [
+        'active' => 'ougc_annbars',
+        'file' => 'ougc_annbars.php'
+    ];
+}
+
+function ougc_annbars_admin_forum_permissions(&$pluginArguments)
+{
+    global $lang, $annbars;
+
+    $annbars->lang_load();
+
+    $pluginArguments['ougc_annbars'] = $lang->ougc_annbars_permissions;
 }
 
 function ougc_annbars_admin_config_plugins_deactivate()
