@@ -27,8 +27,9 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ****************************************************************************/
 
-function task_threadviews($task)
+function task_ougc_annbars($task)
 {
+    global $lang;
 	global $annbars;
 
 	if(!($annbars instanceof OUGC_ANNBARS))
@@ -37,6 +38,7 @@ function task_threadviews($task)
 	}
 
 	$annbars->lang_load();
+
 	$annbars->update_cache();
 
 	add_task_log($task, $lang->task_ougc_annbars_ran);

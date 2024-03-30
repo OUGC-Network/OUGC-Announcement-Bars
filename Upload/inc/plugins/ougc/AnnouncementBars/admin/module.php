@@ -30,6 +30,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Die if IN_MYBB is not defined, for security reasons.
 defined('IN_MYBB') or die('Direct initialization of this file is not allowed.');
 
+global $lang, $page, $db, $config;
+global $annbars;
+
 // Check requirements
 $annbars->meets_requirements() or $annbars->admin_redirect($annbars->message, true);
 
@@ -91,7 +94,7 @@ if($mybb->input['action'] == 'add' || $mybb->input['action'] == 'edit')
         $page->output_nav_tabs($sub_tabs, 'ougc_annbars_edit');
     }
 
-    foreach(array('groups', 'visible', 'forums', 'scripts', 'frules', 'frules_fid', 'frules_closed', 'frules_visible', 'frules_dateline', 'style') as $key)
+    foreach(array('groups', 'visible', 'forums', 'scripts', 'frules', 'style') as $key)
     {
         if(!isset($mybb->input[$key]) && isset($bar[$key]))
         {
@@ -120,28 +123,52 @@ if($mybb->input['action'] == 'add' || $mybb->input['action'] == 'edit')
     $annbars->bar_data['style'] = $mybb->get_input('style');
 
     $group_checked = array('all' => '', 'custom' => '', 'none' => '');
-    if($mybb->get_input('groups_type') == 'all' || $mybb->get_input('groups', 1) == -1 || ($add && $mybb->request_method != 'post'))
+
+    if($mybb->request_method === 'post')
     {
-        $mybb->input['groups_type'] = 'all';
-        $mybb->input['groups'] = -1;
-        $group_checked['all'] = 'checked="checked"';
+        if($mybb->get_input('groups_type') === 'all')
+        {
+            $mybb->input['groups_type'] = 'all';
+            $mybb->input['groups'] = -1;
+            $group_checked['all'] = 'checked="checked"';
+        }
+        elseif($mybb->get_input('groups_type') === 'none')
+        {
+            $mybb->input['groups_type'] = 'none';
+            $mybb->input['groups'] = '';
+            $group_checked['none'] = 'checked="checked"';
+        }
+        else
+        {
+            $mybb->input['groups_type'] = 'custom';
+            $mybb->input['groups'] = $annbars->clean_ints($mybb->input['groups']);
+            $group_checked['custom'] = 'checked="checked"';
+        }
+    } else {
+        if($mybb->get_input('groups', 1) === -1)
+        {
+            $mybb->input['groups_type'] = 'all';
+            $mybb->input['groups'] = -1;
+            $group_checked['all'] = 'checked="checked"';
+        }
+        elseif($mybb->get_input('groups') === '')
+        {
+            $mybb->input['groups_type'] = 'none';
+            $mybb->input['groups'] = '';
+            $group_checked['none'] = 'checked="checked"';
+        }
+        else
+        {
+            $mybb->input['groups_type'] = 'custom';
+            $mybb->input['groups'] = $annbars->clean_ints($mybb->input['groups']);
+            $group_checked['custom'] = 'checked="checked"';
+        }
     }
-    elseif($mybb->get_input('groups_type') == 'none' || $mybb->get_input('groups') == '' && !$mybb->get_input('groups', 2))
-    {
-        $mybb->input['groups_type'] = 'none';
-        $mybb->input['groups'] = '';
-        $group_checked['none'] = 'checked="checked"';
-    }
-    else
-    {
-        $mybb->input['groups_type'] = 'custom';
-        $mybb->input['groups'] = $annbars->clean_ints($mybb->input['groups']);
-        $group_checked['custom'] = 'checked="checked"';
-    }
+
     $annbars->bar_data['groups'] = $mybb->input['groups'];
 
     $visible_checked = array('everywhere' => '', 'custom' => '');
-    if($mybb->get_input('visible_type') == 'everywhere' || $mybb->get_input('visible', 1) == 1 || ($add && $mybb->request_method != 'post'))
+    if($mybb->get_input('visible_type') == 'everywhere' || ($mybb->request_method != 'post' && $mybb->get_input('visible', 1) === 1) || ($add && $mybb->request_method != 'post'))
     {
         $mybb->input['visible_type'] = 'everywhere';
         $mybb->input['visible'] = 1;
@@ -154,23 +181,6 @@ if($mybb->input['action'] == 'add' || $mybb->input['action'] == 'edit')
         $visible_checked['custom'] = 'checked="checked"';
     }
     $annbars->bar_data['visible'] = $mybb->input['visible'];
-
-    $frules_visible_checked = array(1 => '', -1 => '', 0 => '');
-
-    $annbars->bar_data['frules_visible'] = $mybb->get_input('frules_visible', 1);
-
-    if($annbars->bar_data['frules_visible'] == 1)
-    {
-        $frules_visible_checked[1] = 'checked="checked"';
-    }
-    elseif($annbars->bar_data['frules_visible'] == -1)
-    {
-        $frules_visible_checked[-1] = 'checked="checked"';
-    }
-    else
-    {
-        $frules_visible_checked[0] = 'checked="checked"';
-    }
 
     $forum_checked = array('all' => '', 'custom' => '', 'none' => '');
     if($mybb->get_input('forums_type') == 'all' || $mybb->get_input('forums', 1) == -1 || ($add && $mybb->request_method != 'post'))
@@ -333,19 +343,7 @@ if($mybb->input['action'] == 'add' || $mybb->input['action'] == 'edit')
     $form_container->output_row($lang->ougc_annbars_form_startdate." <em>*</em>", $lang->ougc_annbars_form_startdate_d, $form->generate_date_select('startdate', $annbars->bar_data['startdate_day'], $annbars->bar_data['startdate_month'], $annbars->bar_data['startdate_year']));
     $form_container->output_row($lang->ougc_annbars_form_enddate." <em>*</em>", $lang->ougc_annbars_form_enddate_d, $form->generate_date_select('enddate', $annbars->bar_data['enddate_day'], $annbars->bar_data['enddate_month'], $annbars->bar_data['enddate_year']));
 
-    $form_container->output_row($lang->ougc_annbars_form_frules, $lang->ougc_annbars_form_frules_d, $form->generate_yes_no_radio('frules', $annbars->bar_data['frules']));
-    $form_container->output_row($lang->ougc_annbars_form_frules_fid, $lang->ougc_annbars_form_frules_fid_d, $form->generate_forum_select('frules_fid[]', $annbars->bar_data['frules_fid'], array('multiple' => true)));
-    $form_container->output_row($lang->ougc_annbars_form_frules_closed, $lang->ougc_annbars_form_frules_closed_d, $form->generate_yes_no_radio('frules_closed', $annbars->bar_data['frules_closed']));
-
-    $frules_visible_select = "
-	<dl style=\"margin-top: 0; margin-bottom: 0; width: 100%\">
-		<dt><label style=\"display: block;\"><input type=\"radio\" name=\"frules_visible\" value=\"1\" {$frules_visible_checked[1]} style=\"vertical-align: middle;\" /> <strong>{$lang->ougc_annbars_form_frule_visible}</strong></label></dt>
-		<dt><label style=\"display: block;\"><input type=\"radio\" name=\"frules_visible\" value=\"0\" {$frules_visible_checked[0]} style=\"vertical-align: middle;\" /> <strong>{$lang->ougc_annbars_form_frule_unapproved}</strong></label></dt>
-		<dt><label style=\"display: block;\"><input type=\"radio\" name=\"frules_visible\" value=\"-1\" {$frules_visible_checked[-1]} style=\"vertical-align: middle;\" /> <strong>{$lang->ougc_annbars_form_frule_deleted}</strong></label></dt>
-	</dl>";
-
-    $form_container->output_row($lang->ougc_annbars_form_frules_visible, $lang->ougc_annbars_form_frules_visible_d, $frules_visible_select, '', array(), array('id' => 'frules_visible'));
-    $form_container->output_row($lang->ougc_annbars_form_frules_dateline, $lang->ougc_annbars_form_frules_dateline_d, $form->generate_text_box('frules_dateline', $annbars->bar_data['frules_dateline']));
+    $form_container->output_row($lang->ougc_annbars_form_frules.' <em>*</em>', $lang->ougc_annbars_form_frules_d, $form->generate_text_area('frules', $annbars->bar_data['frules'], array('rows' => 10, 'cols' => 90, 'style' => 'width: auto;')));
 
     $form_container->end();
 
@@ -484,7 +482,7 @@ else
     {
         // Update the cache
         $annbars->update_cache();
-        include_once MYBB_ROOT.'inc/tasks/ougc_annbars.php';
+        include_once constant('MYBB_ROOT').'inc/tasks/ougc_annbars.php';
 
         $query = $db->simple_select('ougc_annbars', '*', '', array('limit' => $perpage, 'limit_start' => $start, 'order_by' => 'disporder'));
 
@@ -495,7 +493,7 @@ else
             $bar['visible'] = 'on';
             $bar['lang'] = 'ougc_annbars_form_visible';
             $bar['name'] = htmlspecialchars_uni($bar['name']);
-            if($bar['startdate'] > TIME_NOW || $bar['enddate'] <= TIME_NOW)
+            if($bar['startdate'] > constant('TIME_NOW') || $bar['enddate'] <= constant('TIME_NOW'))
             {
                 $bar['visible'] = 'off';
                 $bar['lang'] = 'ougc_annbars_form_hidden';
