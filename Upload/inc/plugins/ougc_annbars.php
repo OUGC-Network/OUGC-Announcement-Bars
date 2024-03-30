@@ -76,8 +76,8 @@ function ougc_annbars_info()
 		'website'		=> 'https://ougc.network',
 		'author'		=> 'Omar G.',
 		'authorsite'	=> 'https://ougc.network',
-		'version'		=> '1.8.21',
-		'versioncode'	=> 1821,
+		'version'		=> '1.8.36',
+		'versioncode'	=> 1836,
 		'compatibility'	=> '18*',
 		'codename'		=> 'ougc_annbars',
 		'pl'			=> array(
