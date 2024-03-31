@@ -76,8 +76,8 @@ function ougc_annbars_info()
 		'website'		=> 'https://ougc.network',
 		'author'		=> 'Omar G.',
 		'authorsite'	=> 'https://ougc.network',
-		'version'		=> '1.8.36',
-		'versioncode'	=> 1836,
+		'version'		=> '1.8.37',
+		'versioncode'	=> 1837,
 		'compatibility'	=> '18*',
 		'codename'		=> 'ougc_annbars',
 		'pl'			=> array(
@@ -1010,14 +1010,6 @@ function ougc_annbars_uninstall()
 
 	// Update administrator permissions
 	change_admin_permission('forums', 'ougc_annbars', -1);
-}
-
-function ougc_annbars_admin_forum_action_handler(&$pluginArguments)
-{
-    $pluginArguments['ougc_annbars'] = [
-        'active' => 'ougc_annbars',
-        'file' => 'ougc_annbars.php'
-    ];
 }
 
 // Cache manager helper.

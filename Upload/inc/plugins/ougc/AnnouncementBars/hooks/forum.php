@@ -208,7 +208,7 @@ function pre_output_page(&$page)
 
                 $replacementParams = [];
 
-                $displayBar = false;
+                $displayBar = true;
 
                 if($bar['frules'])
                 {
@@ -386,22 +386,22 @@ function pre_output_page(&$page)
                                     switch($threadCountRule['displayComparisonOperator'])
                                     {
                                         case '<':
-                                            if($queryResult < $displayComparisonValue)
+                                            if(!($queryResult < $displayComparisonValue))
                                             {
-                                                $displayBar = true;
+                                                $displayBar = false;
                                             }
                                             break;
                                         case '>':
-                                            if($queryResult > $displayComparisonValue)
+                                            if(!($queryResult > $displayComparisonValue))
                                             {
-                                                $displayBar = true;
+                                                $displayBar = false;
                                             }
                                             break;
                                     }
 
                                     $replacementParams["{$threadCountRule['displayKey']}"] = my_number_format($queryResult);
-                                } elseif($queryResult) {
-                                    $displayBar = true;
+                                } elseif(!$queryResult) {
+                                    $displayBar = false;
                                 }
 
                                 if(isset($threadCountRule['displayKey']) && my_strlen($threadCountRule['displayKey']) > 2)
