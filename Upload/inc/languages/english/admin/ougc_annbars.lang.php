@@ -68,7 +68,7 @@ $l['ougc_annbars_form_content_d'] = 'The content that will be displayed inside t
 {3} = Forum URL.
 {4} = Start date.
 {5} = End date.
-{displayKey} = For a Forum Rule result.
+{displayKey} = For a Display Rule result.
 </pre>';
 $l['ougc_annbars_form_visible'] = 'Visible Pages';
 $l['ougc_annbars_form_visible_d'] = 'Select the pages where this bar will be displayed in.';
